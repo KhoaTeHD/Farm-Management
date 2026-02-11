@@ -1,0 +1,96 @@
+﻿@model Farm_Management.Models.Area
+@{
+    ViewData["Title"] = "Sửa vùng trồng";
+    ViewData["LoadMap"] = true;  // Đổi tên này
+
+    // Parse tọa độ hiện tại để truyền cho map
+    if (!string.IsNullOrEmpty(Model.GpsCoordinates))
+    {
+        var parts = Model.GpsCoordinates.Split(',');
+        if (parts.Length == 2)
+        {
+            ViewData["Latitude"] = parts[0].Trim();
+            ViewData["Longitude"] = parts[1].Trim();
+        }
+    }
+}
+
+<div class="page-header">
+    <h2>📍 Sửa: @Model.Name</h2>
+</div>
+
+<div class="row">
+    <div class="col-lg-8">
+        <div class="card">
+            <div class="card-header card-header-farm">Chỉnh sửa thông tin</div>
+            <div class="card-body">
+                <form asp-action="Edit">
+                    <div asp-validation-summary="ModelOnly" class="text-danger mb-3"></div>
+                    <input type="hidden" asp-for="Id" />
+                    <input type="hidden" asp-for="CreatedAt" />
+
+                    <div class="mb-3">
+                        <label asp-for="Name" class="form-label"></label>
+                        <input asp-for="Name" class="form-control" />
+                        <span asp-validation-for="Name" class="text-danger"></span>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label asp-for="Acreage" class="form-label"></label>
+                            <div class="input-group">
+                                <input asp-for="Acreage" class="form-control" type="number" step="0.01" />
+                                <span class="input-group-text">m²</span>
+                            </div>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label asp-for="SoilType" class="form-label"></label>
+                            <select asp-for="SoilType" class="form-select">
+                                <option value="">-- Chọn loại đất --</option>
+                                <option>Đất phù sa</option>
+                                <option>Đất thịt</option>
+                                <option>Đất cát pha</option>
+                                <option>Đất sét</option>
+                                <option>Đất đỏ bazan</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <!-- Google Maps Picker - pre-filled -->
+                    <div class="mb-3">
+                        <label class="form-label">Tọa độ GPS</label>
+                        @await Html.PartialAsync("_MapPickerPartial")
+                        <input asp-for="GpsCoordinates" type="hidden" />
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label asp-for="SoilTestDate" class="form-label"></label>
+                            <input asp-for="SoilTestDate" class="form-control" type="date" />
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label asp-for="SoilTestResult" class="form-label"></label>
+                            <textarea asp-for="SoilTestResult" class="form-control" rows="2"></textarea>
+                        </div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label asp-for="Notes" class="form-label"></label>
+                        <textarea asp-for="Notes" class="form-control" rows="2"></textarea>
+                    </div>
+
+                    <div class="d-flex gap-2 mt-4">
+                        <button type="submit" class="btn btn-farm">💾 Cập nhật</button>
+                        <a asp-action="Index" class="btn btn-outline-secondary">← Quay lại</a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    @{
+        await Html.RenderPartialAsync("_ValidationScriptsPartial");
+    }
+}

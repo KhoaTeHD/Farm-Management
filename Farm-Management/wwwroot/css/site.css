@@ -1,22 +1,36 @@
-html {
-  font-size: 14px;
+﻿/* --- Leaflet Map Picker --- */
+.map-picker-container {
+    border: 2px solid var(--farm-border);
+    border-radius: 10px;
+    overflow: hidden;
+    position: relative;
 }
+
+    .map-picker-container #map {
+        height: 300px;
+        width: 100%;
+        z-index: 1;
+    }
 
 @media (min-width: 768px) {
-  html {
-    font-size: 16px;
-  }
+    .map-picker-container #map {
+        height: 400px;
+    }
 }
 
-.btn:focus, .btn:active:focus, .btn-link.nav-link:focus, .form-control:focus, .form-check-input:focus {
-  box-shadow: 0 0 0 0.1rem white, 0 0 0 0.25rem #258cfb;
+#searchResults {
+    margin-left: 0.5rem;
+    max-height: 200px;
+    overflow-y: auto;
+    box-shadow: 0 4px 8px rgba(0,0,0,0.15);
+    border-radius: 6px;
 }
 
-html {
-  position: relative;
-  min-height: 100%;
+/* Fix Leaflet z-index xung đột Bootstrap */
+.leaflet-pane {
+    z-index: 1 !important;
 }
 
-body {
-  margin-bottom: 60px;
+.leaflet-top, .leaflet-bottom {
+    z-index: 2 !important;
 }

@@ -1,0 +1,92 @@
+﻿@model IEnumerable<Farm_Management.Models.Area>
+@{
+    ViewData["Title"] = "Vùng trồng";
+}
+
+<div class="page-header">
+    <h2>📍 Vùng trồng</h2>
+    <a asp-action="Create" class="btn btn-farm">+ Thêm vùng trồng</a>
+</div>
+
+@if (TempData["Success"] != null)
+{
+    <div class="alert alert-farm-success alert-dismissible fade show">
+        ✅ @TempData["Success"]
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>
+}
+@if (TempData["Error"] != null)
+{
+    <div class="alert alert-farm-error alert-dismissible fade show">
+        ❌ @TempData["Error"]
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>
+}
+
+@if (!Model.Any())
+{
+    <div class="empty-state">
+        <div class="icon">🌾</div>
+        <h5>Chưa có vùng trồng nào</h5>
+        <p class="text-muted">Hãy thêm vùng trồng đầu tiên để bắt đầu!</p>
+        <a asp-action="Create" class="btn btn-farm">+ Thêm vùng trồng</a>
+    </div>
+}
+else
+{
+    <!-- Desktop: Table | Mobile: Cards -->
+    <div class="table-responsive">
+        <table class="table table-farm table-responsive-card">
+            <thead>
+                <tr>
+                    <th>Tên vùng trồng</th>
+                    <th>Diện tích</th>
+                    <th>Loại đất</th>
+                    <th>XN đất</th>
+                    <th class="text-end">Thao tác</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var item in Model)
+                {
+                    <tr>
+                        <td data-label="Tên">
+                            <a asp-action="Details" asp-route-id="@item.Id" class="fw-bold text-decoration-none" style="color: var(--farm-green);">
+                                @item.Name
+                            </a>
+                        </td>
+                        <td data-label="Diện tích">
+                            @if (item.Acreage.HasValue)
+                            {
+                                @item.Acreage.Value.ToString("N0")
+                    
+                                <small class="text-muted"> m²</small>
+                            }
+                            else
+                            {
+                                <span class="text-muted">—</span>
+                            }
+                        </td>
+                        <td data-label="Loại đất">@(item.SoilType ?? "—")</td>
+                        <td data-label="XN đất">
+                            @if (item.SoilTestDate.HasValue)
+                            {
+                                <span class="badge bg-success">@item.SoilTestDate.Value.ToString("dd/MM/yyyy")</span>
+                            }
+                            else
+                            {
+                                <span class="badge bg-warning text-dark">Chưa XN</span>
+                            }
+                        </td>
+                        <td data-label="" class="text-end">
+                            <div class="action-buttons d-inline-flex gap-1">
+                                <a asp-action="Edit" asp-route-id="@item.Id" class="btn btn-sm btn-outline-farm">Sửa</a>
+                                <a asp-action="Delete" asp-route-id="@item.Id" class="btn btn-sm btn-outline-danger">Xóa</a>
+                            </div>
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+}

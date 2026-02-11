@@ -1,0 +1,133 @@
+﻿@model Farm_Management.Models.Area
+@{
+    ViewData["Title"] = Model.Name;
+    ViewData["LoadMap"] = !string.IsNullOrEmpty(Model.GpsCoordinates);  // Đổi tên này
+
+    string lat = "14.0583", lng = "108.2772";
+    if (!string.IsNullOrEmpty(Model.GpsCoordinates))
+    {
+        var parts = Model.GpsCoordinates.Split(',');
+        if (parts.Length == 2) { lat = parts[0].Trim(); lng = parts[1].Trim(); }
+        ViewData["Latitude"] = lat;
+        ViewData["Longitude"] = lng;
+    }
+}
+
+<div class="page-header">
+    <h2>📍 @Model.Name</h2>
+    <div class="d-flex gap-2">
+        <a asp-action="Edit" asp-route-id="@Model.Id" class="btn btn-farm">✏️ Sửa</a>
+        <a asp-action="Index" class="btn btn-outline-secondary">← Danh sách</a>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-lg-6 mb-4">
+        <div class="card">
+            <div class="card-header card-header-farm">Thông tin chung</div>
+            <div class="card-body">
+                <table class="table table-borderless mb-0">
+                    <tr>
+                        <td class="fw-bold text-muted" style="width:40%">Diện tích</td>
+                        <td>@(Model.Acreage?.ToString("N0") ?? "—") m²</td>
+                    </tr>
+                    <tr>
+                        <td class="fw-bold text-muted">Loại đất</td>
+                        <td>@(Model.SoilType ?? "—")</td>
+                    </tr>
+                    <tr>
+                        <td class="fw-bold text-muted">Tọa độ</td>
+                        <td>@(Model.GpsCoordinates ?? "—")</td>
+                    </tr>
+                    <tr>
+                        <td class="fw-bold text-muted">XN đất</td>
+                        <td>
+                            @if (Model.SoilTestDate.HasValue)
+                            {
+                                <span class="badge bg-success">@Model.SoilTestDate.Value.ToString("dd/MM/yyyy")</span>
+                                <br />
+
+                                <small>@Model.SoilTestResult</small>
+                            }
+                            else
+                            {
+                                <span class="badge bg-warning text-dark">Chưa xét nghiệm</span>
+                            }
+                        </td>
+                    </tr>
+                    <tr>
+                        <td class="fw-bold text-muted">Ghi chú</td>
+                        <td>@(Model.Notes ?? "—")</td>
+                    </tr>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-lg-6 mb-4">
+        @if (!string.IsNullOrEmpty(Model.GpsCoordinates))
+        {
+            <div class="card">
+                <div class="card-header card-header-farm">Vị trí trên bản đồ</div>
+                <div class="card-body p-0">
+                    <div id="map" style="height: 300px; border-radius: 0 0 10px 10px;"></div>
+                </div>
+            </div>
+        }
+    </div>
+</div>
+
+@if (Model.Plants.Any())
+{
+    <div class="card">
+        <div class="card-header card-header-farm">
+            🌱 Lô cây trong vùng này <span class="badge badge-farm">@Model.Plants.Count</span>
+        </div>
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table table-farm mb-0">
+                    <thead>
+                        <tr>
+                            <th>Mã lô</th>
+                            <th>Trạng thái</th>
+                            <th>Ngày trồng</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var plant in Model.Plants)
+                        {
+                            <tr>
+                                <td><strong>@plant.BatchCode</strong></td>
+                                <td>
+                                    <span class="badge @(plant.Status == "Growing" ? "bg-success" :
+                                                                                  plant.Status == "Harvested" ? "bg-secondary" : "bg-info")">
+                                @plant.Status
+                            </span>
+                        </td>
+                        <td>@plant.PlantingDate.ToString("dd/MM/yyyy")</td>
+                    </tr>
+                                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+}
+
+@if (!string.IsNullOrEmpty(Model.GpsCoordinates))
+{
+    @section Scripts {
+        <script>
+            document.addEventListener('DOMContentLoaded', function () {
+                const map = L.map('map').setView([@lat, @lng], 16);
+
+                L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {
+                    attribution: '© Esri'
+                }).addTo(map);
+
+                L.marker([@lat, @lng]).addTo(map)
+                    .bindPopup('<strong>@Model.Name</strong>').openPopup();
+            });
+        </script>
+    }
+}

@@ -1,0 +1,40 @@
+﻿@model Farm_Management.Models.Area
+@{
+    ViewData["Title"] = "Xóa vùng trồng";
+}
+
+<div class="row justify-content-center">
+    <div class="col-lg-6">
+        <div class="card border-danger">
+            <div class="card-header bg-danger text-white">
+                ⚠️ Xác nhận xóa vùng trồng
+            </div>
+            <div class="card-body">
+                <p>Bạn có chắc muốn xóa vùng trồng này?</p>
+
+                <table class="table table-borderless">
+                    <tr>
+                        <td class="fw-bold" style="width:35%">Tên</td>
+                        <td>@Model.Name</td>
+                    </tr>
+                    <tr>
+                        <td class="fw-bold">Diện tích</td>
+                        <td>@(Model.Acreage?.ToString("N0") ?? "—") m²</td>
+                    </tr>
+                    <tr>
+                        <td class="fw-bold">Loại đất</td>
+                        <td>@(Model.SoilType ?? "—")</td>
+                    </tr>
+                </table>
+
+                <form asp-action="Delete">
+                    <input type="hidden" asp-for="Id" />
+                    <div class="d-flex gap-2">
+                        <button type="submit" class="btn btn-danger">🗑 Xác nhận xóa</button>
+                        <a asp-action="Index" class="btn btn-outline-secondary">← Hủy</a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>

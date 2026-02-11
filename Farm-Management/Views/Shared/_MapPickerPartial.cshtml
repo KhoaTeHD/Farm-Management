@@ -1,0 +1,178 @@
+﻿@*
+    Leaflet Map Picker - Miễn phí 100%
+    Truyền ViewData["Latitude"] và ViewData["Longitude"] nếu edit
+*@
+
+<div class="map-picker-container mb-2">
+    <div id="map"></div>
+    <div class="p-2 bg-light d-flex align-items-center gap-2 flex-wrap">
+        <small class="text-muted">📍 Click bản đồ hoặc kéo marker để chọn vị trí</small>
+        <div class="input-group input-group-sm" style="max-width: 320px;">
+            <input type="text" id="mapSearch" class="form-control" placeholder="Tìm địa điểm..." />
+            <button type="button" class="btn btn-outline-farm" id="btnSearch">🔍</button>
+        </div>
+        <button type="button" class="btn btn-sm btn-outline-farm" id="btnGps">
+            📌 Vị trí hiện tại
+        </button>
+    </div>
+    <div id="searchResults" class="list-group" style="display:none; position:absolute; z-index:1000; max-width:320px;"></div>
+</div>
+
+<div class="row mb-3">
+    <div class="col">
+        <small class="text-muted">Tọa độ đã chọn: </small>
+        <span id="coordsDisplay" class="fw-bold text-success">Chưa chọn</span>
+    </div>
+</div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        // Default: Trung tâm Việt Nam hoặc tọa độ đã lưu
+        const defaultLat = @(ViewData["Latitude"] ?? "14.0583");
+        const defaultLng = @(ViewData["Longitude"] ?? "108.2772");
+        const hasExisting = @(ViewData["Latitude"] != null ? "true" : "false");
+        const defaultZoom = hasExisting ? 16 : 6;
+
+        // Khởi tạo map
+        const map = L.map('map').setView([defaultLat, defaultLng], defaultZoom);
+
+        // Layer bản đồ thường
+        const streetLayer = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            attribution: '© OpenStreetMap',
+            maxZoom: 19
+        });
+
+        // Layer vệ tinh (Esri - miễn phí)
+        const satelliteLayer = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {
+            attribution: '© Esri',
+            maxZoom: 18
+        });
+
+        // Mặc định dùng vệ tinh (phù hợp nông nghiệp, thấy ruộng rõ)
+        satelliteLayer.addTo(map);
+
+        // Nút chuyển đổi layer
+        L.control.layers({
+            'Bản đồ': streetLayer,
+            'Vệ tinh': satelliteLayer
+        }).addTo(map);
+
+        // Marker
+        const marker = L.marker([defaultLat, defaultLng], { draggable: true }).addTo(map);
+
+        if (hasExisting) {
+            updateCoordinates(defaultLat, defaultLng);
+        }
+
+        // Click map → di chuyển marker
+        map.on('click', function (e) {
+            marker.setLatLng(e.latlng);
+            updateCoordinates(e.latlng.lat, e.latlng.lng);
+        });
+
+        // Drag marker
+        marker.on('dragend', function (e) {
+            const pos = e.target.getLatLng();
+            updateCoordinates(pos.lat, pos.lng);
+        });
+
+        // Cập nhật tọa độ
+        function updateCoordinates(lat, lng) {
+            const latR = Math.round(lat * 1000000) / 1000000;
+            const lngR = Math.round(lng * 1000000) / 1000000;
+
+            // Cập nhật hidden field GpsCoordinates
+            const gpsField = document.querySelector('[name="GpsCoordinates"]');
+            if (gpsField) {
+                gpsField.value = latR + ', ' + lngR;
+            }
+
+            // Hiển thị tọa độ
+            document.getElementById('coordsDisplay').textContent = latR + ', ' + lngR;
+        }
+
+        // === SEARCH (Nominatim - miễn phí) ===
+        const searchInput = document.getElementById('mapSearch');
+        const searchResults = document.getElementById('searchResults');
+
+        document.getElementById('btnSearch').addEventListener('click', doSearch);
+        searchInput.addEventListener('keypress', function (e) {
+            if (e.key === 'Enter') { e.preventDefault(); doSearch(); }
+        });
+
+        function doSearch() {
+            const query = searchInput.value.trim();
+            if (!query) return;
+
+            // Nominatim API - hoàn toàn miễn phí
+            fetch('https://nominatim.openstreetmap.org/search?format=json&q=' + encodeURIComponent(query) + '&countrycodes=vn&limit=5', {
+                headers: { 'Accept-Language': 'vi' }
+            })
+            .then(res => res.json())
+            .then(data => {
+                searchResults.innerHTML = '';
+                if (data.length === 0) {
+                    searchResults.innerHTML = '<div class="list-group-item text-muted">Không tìm thấy</div>';
+                    searchResults.style.display = 'block';
+                    return;
+                }
+
+                data.forEach(item => {
+                    const btn = document.createElement('button');
+                    btn.type = 'button';
+                    btn.className = 'list-group-item list-group-item-action py-1 small';
+                    btn.textContent = item.display_name.substring(0, 80);
+                    btn.addEventListener('click', function () {
+                        const lat = parseFloat(item.lat);
+                        const lng = parseFloat(item.lon);
+                        map.setView([lat, lng], 17);
+                        marker.setLatLng([lat, lng]);
+                        updateCoordinates(lat, lng);
+                        searchResults.style.display = 'none';
+                        searchInput.value = '';
+                    });
+                    searchResults.appendChild(btn);
+                });
+                searchResults.style.display = 'block';
+            })
+            .catch(() => {
+                searchResults.innerHTML = '<div class="list-group-item text-danger">Lỗi tìm kiếm</div>';
+                searchResults.style.display = 'block';
+            });
+        }
+
+        // Ẩn kết quả khi click ra ngoài
+        document.addEventListener('click', function (e) {
+            if (!searchResults.contains(e.target) && e.target !== searchInput) {
+                searchResults.style.display = 'none';
+            }
+        });
+
+        // === GPS - Vị trí hiện tại ===
+        document.getElementById('btnGps').addEventListener('click', function () {
+            if (!navigator.geolocation) {
+                alert('Trình duyệt không hỗ trợ GPS');
+                return;
+            }
+
+            this.textContent = '⏳ Đang lấy...';
+            const btn = this;
+
+            navigator.geolocation.getCurrentPosition(
+                function (pos) {
+                    const lat = pos.coords.latitude;
+                    const lng = pos.coords.longitude;
+                    map.setView([lat, lng], 17);
+                    marker.setLatLng([lat, lng]);
+                    updateCoordinates(lat, lng);
+                    btn.textContent = '📌 Vị trí hiện tại';
+                },
+                function () {
+                    alert('Không thể lấy vị trí. Hãy cho phép truy cập GPS.');
+                    btn.textContent = '📌 Vị trí hiện tại';
+                },
+                { enableHighAccuracy: true, timeout: 10000 }
+            );
+        });
+    });
+</script>
