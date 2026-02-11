@@ -1,0 +1,85 @@
+﻿@model Farm_Management.Models.Worker
+@{
+    ViewData["Title"] = "Xóa công nhân";
+}
+
+<div class="row justify-content-center">
+    <div class="col-lg-6">
+        <div class="card border-danger">
+            <div class="card-header bg-danger text-white">
+                ⚠️ Xác nhận xóa công nhân
+            </div>
+            <div class="card-body">
+                <p class="text-danger fw-bold">Bạn có chắc muốn xóa công nhân này?</p>
+                <p class="text-muted small">
+                    <strong>Lưu ý:</strong> Nếu công nhân đã có lịch sử làm việc (phun thuốc, bón phân, tưới nước, thu hoạch),
+                    hệ thống sẽ không cho phép xóa để đảm bảo tính toàn vẹn của dữ liệu truy xuất nguồn gốc.
+                </p>
+
+                <div class="card bg-light mt-3 mb-3">
+                    <div class="card-body">
+                        <table class="table table-borderless mb-0">
+                            <tr>
+                                <td class="fw-bold" style="width:35%">Mã CN</td>
+                                <td>@Model.Code</td>
+                            </tr>
+                            <tr>
+                                <td class="fw-bold">Họ tên</td>
+                                <td>@Model.FullName</td>
+                            </tr>
+                            <tr>
+                                <td class="fw-bold">SĐT</td>
+                                <td>@(Model.Phone ?? "—")</td>
+                            </tr>
+                            <tr>
+                                <td class="fw-bold">Lương ngày</td>
+                                <td><span class="text-success fw-bold">@Model.DailySalary.ToString("N0") VNĐ</span></td>
+                            </tr>
+                            <tr>
+                                <td class="fw-bold">Ngày vào làm</td>
+                                <td>@(Model.HireDate?.ToString("dd/MM/yyyy") ?? "—")</td>
+                            </tr>
+                            <tr>
+                                <td class="fw-bold">Trạng thái</td>
+                                <td>
+                                    @if (Model.IsActive)
+                                    {
+                                        <span class="badge bg-success">Đang làm</span>
+                                    }
+                                    else
+                                    {
+                                        <span class="badge bg-secondary">Nghỉ việc</span>
+                                    }
+                                </td>
+                            </tr>
+                        </table>
+                    </div>
+                </div>
+
+                <div class="alert alert-warning">
+                    <strong>⚡ Thay vì xóa:</strong> Nếu công nhân nghỉ việc, bạn có thể:
+                    <ul class="mb-0 mt-2">
+                        <li>Bỏ tích "Đang làm việc" khi sửa thông tin</li>
+                        <li>Công nhân sẽ không hiển thị trong danh sách chấm công</li>
+                        <li>Lịch sử làm việc vẫn được lưu trữ đầy đủ</li>
+                    </ul>
+                </div>
+
+                <form asp-action="Delete">
+                    <input type="hidden" asp-for="Id" />
+                    <div class="d-flex gap-2 justify-content-between mt-4">
+                        <a asp-action="Index" class="btn btn-outline-secondary">← Hủy</a>
+                        <div class="d-flex gap-2">
+                            <a asp-action="Edit" asp-route-id="@Model.Id" class="btn btn-outline-primary">
+                                ✏️ Sửa thông tin thay vì xóa
+                            </a>
+                            <button type="submit" class="btn btn-danger">
+                                🗑 Xác nhận xóa
+                            </button>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>

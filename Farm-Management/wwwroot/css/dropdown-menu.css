@@ -1,0 +1,87 @@
+﻿/* ============================================
+   DROPDOWN MENU STYLING
+   ============================================ */
+
+/* Dropdown trong navbar */
+.navbar-farm .dropdown-menu {
+    background-color: #ffffff;
+    border: 2px solid var(--border-color);
+    border-radius: 8px;
+    box-shadow: var(--shadow-md);
+    padding: 0.5rem 0;
+    margin-top: 0.5rem;
+}
+
+.navbar-farm .dropdown-item {
+    color: var(--text-dark);
+    padding: 0.6rem 1.2rem;
+    font-weight: 500;
+    transition: all 0.2s ease;
+}
+
+    .navbar-farm .dropdown-item:hover,
+    .navbar-farm .dropdown-item:focus {
+        background-color: rgba(107, 157, 62, 0.1);
+        color: var(--primary-green);
+        padding-left: 1.5rem;
+    }
+
+.navbar-farm .dropdown-divider {
+    border-top: 1px solid var(--border-color);
+    margin: 0.5rem 0;
+}
+
+/* Dropdown toggle arrow */
+.navbar-farm .dropdown-toggle::after {
+    margin-left: 0.3rem;
+    vertical-align: 0.15em;
+}
+
+/* Active dropdown */
+.navbar-farm .dropdown-toggle.show {
+    background-color: rgba(255, 255, 255, 0.15);
+}
+
+/* Mobile: Full width dropdown */
+@media (max-width: 991px) {
+    .navbar-farm .dropdown-menu {
+        border: none;
+        background-color: rgba(255, 255, 255, 0.1);
+        box-shadow: none;
+        margin-top: 0;
+    }
+
+    .navbar-farm .dropdown-item {
+        color: rgba(255, 255, 255, 0.9);
+        padding-left: 2rem;
+    }
+
+        .navbar-farm .dropdown-item:hover {
+            background-color: rgba(255, 255, 255, 0.15);
+            color: #ffffff;
+            padding-left: 2.5rem;
+        }
+
+    .navbar-farm .dropdown-divider {
+        border-top-color: rgba(255, 255, 255, 0.2);
+    }
+}
+
+/* Footer fix */
+.footer {
+    background: linear-gradient(135deg, var(--primary-green-dark) 0%, var(--primary-green) 100%);
+    color: rgba(255, 255, 255, 0.9);
+    padding: 1.5rem 0;
+    border-top: 3px solid var(--accent-green);
+    margin-top: 3rem;
+}
+
+    .footer a {
+        color: #ffffff;
+        text-decoration: none;
+        transition: all 0.3s ease;
+    }
+
+        .footer a:hover {
+            color: var(--accent-green);
+        }

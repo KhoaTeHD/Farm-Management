@@ -24,6 +24,9 @@ namespace Farm_Management.Data
         public DbSet<WaterIrrigationLog> WaterIrrigationLogs { get; set; }
         public DbSet<HarvestBatch> HarvestBatches { get; set; }
 
+        // Payroll tables
+        public DbSet<AttendanceLog> AttendanceLogs { get; set; }
+
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             base.OnModelCreating(modelBuilder);
@@ -44,6 +47,10 @@ namespace Farm_Management.Data
             // Decimal precision
             modelBuilder.Entity<Area>()
                 .Property(a => a.Acreage)
+                .HasColumnType("decimal(18,2)");
+
+            modelBuilder.Entity<Worker>()
+                .Property(w => w.DailySalary)
                 .HasColumnType("decimal(18,2)");
 
             modelBuilder.Entity<Pesticide>()
@@ -165,6 +172,23 @@ namespace Farm_Management.Data
                 .WithMany(pt => pt.Seeds)
                 .HasForeignKey(s => s.PlantTypeId)
                 .OnDelete(DeleteBehavior.Restrict);
+
+            // AttendanceLog → Worker
+            modelBuilder.Entity<AttendanceLog>()
+                .HasOne(a => a.Worker)
+                .WithMany(w => w.AttendanceLogs)
+                .HasForeignKey(a => a.WorkerId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            // Unique constraint: Một worker chỉ có 1 record/ngày
+            modelBuilder.Entity<AttendanceLog>()
+                .HasIndex(a => new { a.WorkerId, a.Date })
+                .IsUnique();
+
+            // Decimal precision for HoursWorked
+            modelBuilder.Entity<AttendanceLog>()
+                .Property(a => a.HoursWorked)
+                .HasColumnType("decimal(4,2)");
         }
     }
 }

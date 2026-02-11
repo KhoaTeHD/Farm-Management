@@ -1,0 +1,131 @@
+﻿@model Farm_Management.Models.AttendanceLog
+@{
+    ViewData["Title"] = "Xóa chấm công";
+}
+
+<div class="row justify-content-center">
+    <div class="col-lg-6">
+        <div class="card border-danger">
+            <div class="card-header bg-danger text-white">
+                ⚠️ Xác nhận xóa chấm công
+            </div>
+            <div class="card-body">
+                <p class="text-danger fw-bold">Bạn có chắc muốn xóa bản ghi chấm công này?</p>
+
+                <div class="card bg-light mb-3">
+                    <div class="card-body">
+                        <table class="table table-borderless mb-0">
+                            <tr>
+                                <td class="fw-bold" style="width:40%">Công nhân</td>
+                                <td>
+                                    <strong>@Model.Worker.Code</strong> - @Model.Worker.FullName
+                                </td>
+                            </tr>
+                            <tr>
+                                <td class="fw-bold">Ngày</td>
+                                <td>@Model.Date.ToString("dddd, dd/MM/yyyy", new System.Globalization.CultureInfo("vi-VN"))</td>
+                            </tr>
+                            <tr>
+                                <td class="fw-bold">Số giờ làm</td>
+                                <td><strong class="text-primary">@Model.HoursWorked</strong> giờ</td>
+                            </tr>
+                            <tr>
+                                <td class="fw-bold">Phân loại</td>
+                                <td>
+                                    @if (Model.WorkType == "FullDay")
+                                    {
+                                        <span class="badge bg-success">1 công</span>
+                                    }
+                                    else if (Model.WorkType == "HalfDay")
+                                    {
+                                        <span class="badge bg-warning text-dark">0.5 công</span>
+                                    }
+                                    else
+                                    {
+                                        <span class="badge bg-info">@Model.HoursWorked giờ lẻ</span>
+                                    }
+                                </td>
+                            </tr>
+                            <tr>
+                                <td class="fw-bold">Lương ngày</td>
+                                <td>
+                                    <span class="text-success fw-bold">@Model.Worker.DailySalary.ToString("N0") đ</span>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td class="fw-bold">Ước tính lương</td>
+                                <td>
+                                    @{
+                                        decimal estimatedPay = 0;
+                                        if (Model.WorkType == "FullDay")
+                                        {
+                                            estimatedPay = Model.Worker.DailySalary;
+                                        }
+                                        else if (Model.WorkType == "HalfDay")
+                                        {
+                                            estimatedPay = Model.Worker.DailySalary / 2;
+                                        }
+                                        else
+                                        {
+                                            estimatedPay = Model.HoursWorked * (Model.Worker.DailySalary / 8);
+                                        }
+                                    }
+                                    <strong class="text-success">~@estimatedPay.ToString("N0") đ</strong>
+                                </td>
+                            </tr>
+                            @if (!string.IsNullOrEmpty(Model.Notes))
+                            {
+                                <tr>
+                                    <td class="fw-bold">Ghi chú</td>
+                                    <td>@Model.Notes</td>
+                                </tr>
+                            }
+                            <tr>
+                                <td class="fw-bold">Ngày tạo</td>
+                                <td>
+                                    <small class="text-muted">@Model.CreatedAt.ToString("dd/MM/yyyy HH:mm")</small>
+                                </td>
+                            </tr>
+                        </table>
+                    </div>
+                </div>
+
+                <div class="alert alert-warning">
+                    <strong>⚠️ Hậu quả khi xóa:</strong>
+                    <ul class="mb-0 mt-2">
+                        <li>Dữ liệu chấm công sẽ bị xóa vĩnh viễn</li>
+                        <li>Nếu đã có bảng lương tính từ ngày này, cần tính lại</li>
+                        <li>Ảnh hưởng đến báo cáo chấm công tháng</li>
+                        <li>Không thể khôi phục sau khi xóa</li>
+                    </ul>
+                </div>
+
+                <div class="alert alert-info">
+                    <strong>💡 Thay vì xóa:</strong> Nếu chấm công sai, bạn có thể:
+                    <ul class="mb-0 mt-2">
+                        <li>Sửa số giờ làm việc</li>
+                        <li>Thêm ghi chú giải thích</li>
+                        <li>Giữ lại dữ liệu để đối chiếu sau này</li>
+                    </ul>
+                </div>
+
+                <form asp-action="Delete">
+                    <input type="hidden" asp-for="Id" />
+                    <div class="d-flex gap-2 justify-content-between mt-4">
+                        <a asp-action="Index" asp-route-date="@Model.Date.ToString("yyyy-MM-dd")"
+                           class="btn btn-outline-secondary">← Hủy</a>
+                        <div class="d-flex gap-2">
+                            <a asp-action="Edit" asp-route-id="@Model.Id"
+                               class="btn btn-outline-primary">
+                                ✏️ Sửa thay vì xóa
+                            </a>
+                            <button type="submit" class="btn btn-danger">
+                                🗑 Xác nhận xóa
+                            </button>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>

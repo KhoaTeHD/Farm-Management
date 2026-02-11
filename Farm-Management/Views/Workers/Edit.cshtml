@@ -1,0 +1,99 @@
+﻿@model Farm_Management.Models.Worker
+@{
+    ViewData["Title"] = "Sửa thông tin công nhân";
+}
+
+<div class="page-header">
+    <h2>👷 Sửa: @Model.FullName</h2>
+</div>
+
+<div class="form-container-center">
+    <div class="card">
+        <div class="card-header card-header-farm">Chỉnh sửa thông tin</div>
+        <div class="card-body">
+            <form asp-action="Edit">
+                <div asp-validation-summary="ModelOnly" class="text-danger mb-3"></div>
+                <input type="hidden" asp-for="Id" />
+                <input type="hidden" asp-for="CreatedAt" />
+
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <label asp-for="Code" class="form-label"></label>
+                        <input asp-for="Code" class="form-control" />
+                        <span asp-validation-for="Code" class="text-danger"></span>
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <label asp-for="FullName" class="form-label"></label>
+                        <input asp-for="FullName" class="form-control" />
+                        <span asp-validation-for="FullName" class="text-danger"></span>
+                    </div>
+                </div>
+
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <label asp-for="Phone" class="form-label"></label>
+                        <input asp-for="Phone" class="form-control" />
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <label asp-for="HireDate" class="form-label"></label>
+                        <input asp-for="HireDate" class="form-control" type="date" />
+                    </div>
+                </div>
+
+                <div class="mb-3">
+                    <label asp-for="DailySalary" class="form-label"></label>
+                    <div class="input-group">
+                        <input asp-for="DailySalary" class="form-control" type="number" step="1000" />
+                        <span class="input-group-text">VNĐ/ngày</span>
+                    </div>
+                    <span asp-validation-for="DailySalary" class="text-danger"></span>
+                    <small class="text-muted">Lương cơ bản cho 1 ngày công (8 giờ). Lương giờ = Lương ngày ÷ 8</small>
+                </div>
+
+                <div class="mb-3 form-check">
+                    <input asp-for="IsActive" class="form-check-input" />
+                    <label asp-for="IsActive" class="form-check-label"></label>
+                    <small class="form-text text-muted d-block">Bỏ tích nếu công nhân đã nghỉ việc</small>
+                </div>
+
+                <div class="alert alert-info">
+                    <strong>💡 Lưu ý:</strong>
+                    <ul class="mb-0 mt-2">
+                        <li>Lương giờ tự động = Lương ngày ÷ 8</li>
+                        <li>VD: Lương 200,000đ/ngày → 25,000đ/giờ</li>
+                        <li>Thay đổi lương chỉ áp dụng cho chu kỳ lương mới</li>
+                    </ul>
+                </div>
+
+                <div class="d-flex gap-2 mt-4">
+                    <button type="submit" class="btn btn-farm">💾 Cập nhật</button>
+                    <a asp-action="Index" class="btn btn-outline-secondary">← Quay lại</a>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    @{
+        await Html.RenderPartialAsync("_ValidationScriptsPartial");
+    }
+
+    <script>
+        // Format number with thousands separator
+        document.addEventListener('DOMContentLoaded', function() {
+            const salaryInput = document.querySelector('input[name="DailySalary"]');
+            
+            salaryInput.addEventListener('blur', function() {
+                if (this.value) {
+                    const value = parseFloat(this.value);
+                    if (!isNaN(value)) {
+                        // Round to nearest 1000
+                        const rounded = Math.round(value / 1000) * 1000;
+                        this.value = rounded;
+                    }
+                }
+            });
+        });
+    </script>
+}

@@ -1,0 +1,162 @@
+﻿@model Farm_Management.Models.AttendanceLog
+@{
+    ViewData["Title"] = "Sửa chấm công";
+}
+
+<div class="page-header">
+    <h2>📋 Sửa chấm công</h2>
+</div>
+
+<div class="form-container-center">
+    <div class="card">
+        <div class="card-header card-header-farm">
+            Chỉnh sửa - @Model.Worker.FullName (@Model.Date.ToString("dd/MM/yyyy"))
+        </div>
+        <div class="card-body">
+            <form asp-action="Edit">
+                <div asp-validation-summary="ModelOnly" class="text-danger mb-3"></div>
+                <input type="hidden" asp-for="Id" />
+                <input type="hidden" asp-for="WorkerId" />
+                <input type="hidden" asp-for="Date" />
+                <input type="hidden" asp-for="CreatedAt" />
+
+                <!-- Worker Info (Read-only) -->
+                <div class="card bg-light mb-3">
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-md-6">
+                                <strong>Mã CN:</strong> @Model.Worker.Code
+                            </div>
+                            <div class="col-md-6">
+                                <strong>Họ tên:</strong> @Model.Worker.FullName
+                            </div>
+                        </div>
+                        <div class="row mt-2">
+                            <div class="col-md-6">
+                                <strong>Ngày:</strong> @Model.Date.ToString("dddd, dd/MM/yyyy", new System.Globalization.CultureInfo("vi-VN"))
+                            </div>
+                            <div class="col-md-6">
+                                <strong>Lương ngày:</strong>
+                                <span class="text-success">@Model.Worker.DailySalary.ToString("N0") đ</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="mb-3">
+                    <label asp-for="HoursWorked" class="form-label"></label>
+                    <div class="input-group">
+                        <input asp-for="HoursWorked" class="form-control" type="number"
+                               step="0.5" min="0" max="24" id="hoursInput" />
+                        <span class="input-group-text" id="workTypeBadge">
+                            @if (Model.WorkType == "FullDay")
+                            {
+                                <span class="badge bg-success">1 công</span>
+                            }
+                            else if (Model.WorkType == "HalfDay")
+                            {
+                                <span class="badge bg-warning text-dark">0.5 công</span>
+                            }
+                            else
+                            {
+                                <span class="badge bg-info">@Model.HoursWorked giờ lẻ</span>
+                            }
+                        </span>
+                    </div>
+                    <span asp-validation-for="HoursWorked" class="text-danger"></span>
+                </div>
+
+                <div class="mb-3">
+                    <label asp-for="Notes" class="form-label"></label>
+                    <textarea asp-for="Notes" class="form-control" rows="2"></textarea>
+                </div>
+
+                <!-- Calculation Preview -->
+                <div class="alert alert-success">
+                    <strong>💰 Ước tính lương cho ngày này:</strong>
+                    <div class="mt-2" id="salaryPreview">
+                        <span id="previewText"></span>
+                    </div>
+                </div>
+
+                <div class="alert alert-warning">
+                    <strong>⚠️ Lưu ý:</strong>
+                    <ul class="mb-0 mt-2">
+                        <li>Phân loại công sẽ tự động cập nhật dựa trên số giờ</li>
+                        <li>Thay đổi chấm công có thể ảnh hưởng đến bảng lương đã tạo</li>
+                        <li>Nên kiểm tra lại bảng lương sau khi sửa</li>
+                    </ul>
+                </div>
+
+                <div class="d-flex gap-2 mt-4">
+                    <button type="submit" class="btn btn-farm">💾 Cập nhật</button>
+                    <a asp-action="Index" asp-route-date="@Model.Date.ToString("yyyy-MM-dd")"
+                       class="btn btn-outline-secondary">← Quay lại</a>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    @{
+        await Html.RenderPartialAsync("_ValidationScriptsPartial");
+    }
+
+    <script>
+        const hoursInput = document.getElementById('hoursInput');
+        const badge = document.getElementById('workTypeBadge');
+        const previewText = document.getElementById('previewText');
+        const dailySalary = @Model.Worker.DailySalary;
+        const hourlyRate = dailySalary / 8;
+
+        hoursInput.addEventListener('input', updatePreview);
+
+        function updatePreview() {
+            const hours = parseFloat(hoursInput.value) || 0;
+            let workType = '';
+            let salary = 0;
+            let badgeClass = '';
+            let badgeText = '';
+
+            if (hours >= 8) {
+                workType = 'FullDay';
+                salary = dailySalary;
+                badgeClass = 'badge bg-success';
+                badgeText = '1 công';
+            } else if (hours == 4) {
+                workType = 'HalfDay';
+                salary = dailySalary / 2;
+                badgeClass = 'badge bg-warning text-dark';
+                badgeText = '0.5 công';
+            } else if (hours > 0) {
+                workType = 'OddHours';
+                salary = hours * hourlyRate;
+                badgeClass = 'badge bg-info';
+                badgeText = hours + ' giờ lẻ';
+            } else {
+                badgeClass = 'badge bg-secondary';
+                badgeText = 'Chưa nhập';
+            }
+
+            badge.innerHTML = `<span class="${badgeClass}">${badgeText}</span>`;
+
+            // Update salary preview
+            const formatter = new Intl.NumberFormat('vi-VN');
+            if (hours > 0) {
+                if (workType === 'FullDay') {
+                    previewText.innerHTML = `${hours} giờ = 1 công × ${formatter.format(dailySalary)}đ = <strong>${formatter.format(salary)}đ</strong>`;
+                } else if (workType === 'HalfDay') {
+                    previewText.innerHTML = `${hours} giờ = 0.5 công × ${formatter.format(dailySalary)}đ = <strong>${formatter.format(salary)}đ</strong>`;
+                } else {
+                    previewText.innerHTML = `${hours} giờ × ${formatter.format(hourlyRate)}đ/giờ = <strong>${formatter.format(salary)}đ</strong>`;
+                }
+            } else {
+                previewText.innerHTML = 'Nhập số giờ để xem ước tính';
+            }
+        }
+
+        // Initial update
+        updatePreview();
+    </script>
+}

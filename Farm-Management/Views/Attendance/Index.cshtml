@@ -1,0 +1,286 @@
+﻿@model IEnumerable<Farm_Management.Models.AttendanceLog>
+@{
+    ViewData["Title"] = "Chấm công";
+    var selectedDate = (DateTime)ViewBag.SelectedDate;
+    var availableWorkers = (List<Farm_Management.Models.Worker>)ViewBag.AvailableWorkers;
+}
+
+<div class="page-header">
+    <h2>📋 Chấm công nhân viên</h2>
+    <a asp-action="Create" asp-route-date="@selectedDate.ToString("yyyy-MM-dd")" class="btn btn-farm">
+        + Chấm công đơn lẻ
+    </a>
+</div>
+
+@if (TempData["Success"] != null)
+{
+    <div class="alert alert-farm-success alert-dismissible fade show">
+        ✅ @Html.Raw(TempData["Success"])
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>
+}
+@if (TempData["Error"] != null)
+{
+    <div class="alert alert-farm-error alert-dismissible fade show">
+        ❌ @Html.Raw(TempData["Error"])
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>
+}
+
+<!-- Date Navigation -->
+<div class="card mb-4">
+    <div class="card-body">
+        <div class="row align-items-center">
+            <div class="col-md-6">
+                <div class="d-flex align-items-center gap-2">
+                    <a asp-action="Index" asp-route-date="@selectedDate.AddDays(-1).ToString("yyyy-MM-dd")" 
+                       class="btn btn-outline-farm">
+                        ← Hôm qua
+                    </a>
+                    <input type="date" id="dateSelector" class="form-control" 
+                           value="@selectedDate.ToString("yyyy-MM-dd")" 
+                           style="max-width: 200px;" />
+                    <a asp-action="Index" asp-route-date="@selectedDate.AddDays(1).ToString("yyyy-MM-dd")" 
+                       class="btn btn-outline-farm">
+                        Ngày mai →
+                    </a>
+                </div>
+            </div>
+            <div class="col-md-6 text-md-end mt-2 mt-md-0">
+                <h4 class="mb-0">
+                    📅 @selectedDate.ToString("dddd, dd/MM/yyyy", new System.Globalization.CultureInfo("vi-VN"))
+                </h4>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Quick Mark Form -->
+@if (availableWorkers.Any())
+{
+    <div class="card mb-4">
+        <div class="card-header card-header-farm">
+            ⚡ Chấm công nhanh - Chọn nhiều công nhân
+        </div>
+        <div class="card-body">
+            <form asp-action="MarkAttendance" method="post">
+                <input type="hidden" name="date" value="@selectedDate.ToString("yyyy-MM-dd")" />
+                
+                <div class="table-responsive">
+                    <table class="table table-hover">
+                        <thead class="table-light">
+                            <tr>
+                                <th style="width: 40px;">
+                                    <input type="checkbox" id="selectAll" class="form-check-input" />
+                                </th>
+                                <th>Mã CN</th>
+                                <th>Họ tên</th>
+                                <th style="width: 150px;">Số giờ *</th>
+                                <th>Ghi chú</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var worker in availableWorkers)
+                            {
+                                <tr class="worker-row">
+                                    <td>
+                                        <input type="checkbox" name="workerIds" value="@worker.Id" 
+                                               class="form-check-input worker-checkbox" />
+                                    </td>
+                                    <td><strong>@worker.Code</strong></td>
+                                    <td>@worker.FullName</td>
+                                    <td>
+                                        <div class="input-group input-group-sm">
+                                            <input type="number" name="hours" class="form-control hours-input" 
+                                                   step="0.5" min="0" max="24" value="8" disabled />
+                                            <span class="input-group-text work-type-badge">1 công</span>
+                                        </div>
+                                    </td>
+                                    <td>
+                                        <input type="text" name="notes" class="form-control form-control-sm" 
+                                               placeholder="Ghi chú..." disabled />
+                                    </td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+
+                <div class="d-flex justify-content-between align-items-center mt-3">
+                    <div>
+                        <strong>💡 Quy tắc:</strong>
+                        <span class="badge bg-success">≥ 8 giờ = 1 công</span>
+                        <span class="badge bg-warning text-dark">= 4 giờ = 0.5 công</span>
+                        <span class="badge bg-info"> 4 giờ = Giờ lẻ</span>
+                    </div>
+                    <button type="submit" class="btn btn-farm" id="submitBtn" disabled>
+                        💾 Lưu chấm công (<span id="selectedCount">0</span>)
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+}
+else if (!Model.Any())
+{
+    <div class="alert alert-info">
+        <strong>✅ Đã chấm công hết!</strong> Tất cả công nhân đang làm việc đã được chấm công ngày này.
+    </div>
+}
+
+<!-- Attendance List -->
+@if (Model.Any())
+{
+    <div class="card">
+        <div class="card-header card-header-farm">
+            📊 Đã chấm công - <strong>@Model.Count()</strong> người
+        </div>
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table table-farm mb-0">
+                    <thead>
+                        <tr>
+                            <th>Mã CN</th>
+                            <th>Họ tên</th>
+                            <th>Số giờ</th>
+                            <th>Phân loại</th>
+                            <th>Ghi chú</th>
+                            <th class="text-end">Thao tác</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var log in Model)
+                        {
+                            <tr>
+                                <td><strong>@log.Worker.Code</strong></td>
+                                <td>@log.Worker.FullName</td>
+                                <td><strong>@log.HoursWorked</strong> giờ</td>
+                                <td>
+                                    @if (log.WorkType == "FullDay")
+                                    {
+                                        <span class="badge bg-success">1 công</span>
+                                    }
+                                    else if (log.WorkType == "HalfDay")
+                                    {
+                                        <span class="badge bg-warning text-dark">0.5 công</span>
+                                    }
+                                    else
+                                    {
+                                        <span class="badge bg-info">@log.HoursWorked giờ lẻ</span>
+                                    }
+                                </td>
+                                <td>@(log.Notes ?? "—")</td>
+                                <td class="text-end">
+                                    <div class="d-inline-flex gap-1">
+                                        <a asp-action="Edit" asp-route-id="@log.Id" 
+                                           class="btn btn-sm btn-outline-farm" title="Sửa">✏️</a>
+                                        <a asp-action="Delete" asp-route-id="@log.Id" 
+                                           class="btn btn-sm btn-outline-danger" title="Xóa">🗑</a>
+                                    </div>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- Summary -->
+    <div class="row mt-3">
+        <div class="col-md-4">
+            <div class="card bg-success text-white">
+                <div class="card-body">
+                    <h6>Ngày công (≥8h)</h6>
+                    <h3>@Model.Count(l => l.WorkType == "FullDay")</h3>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card bg-warning">
+                <div class="card-body">
+                    <h6>Nửa công (4h)</h6>
+                    <h3>@Model.Count(l => l.WorkType == "HalfDay")</h3>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card bg-info text-white">
+                <div class="card-body">
+                    <h6>Giờ lẻ</h6>
+                    <h3>@Model.Where(l => l.WorkType == "OddHours").Sum(l => l.HoursWorked) giờ</h3>
+                </div>
+            </div>
+        </div>
+    </div>
+}
+else
+{
+    <div class="empty-state">
+        <div class="icon">📋</div>
+        <h5>Chưa có chấm công nào</h5>
+        <p class="text-muted">Hãy bắt đầu chấm công cho ngày @selectedDate.ToString("dd/MM/yyyy")!</p>
+    </div>
+}
+
+@section Scripts {
+    <script>
+        // Date selector
+        document.getElementById('dateSelector').addEventListener('change', function() {
+            window.location.href = '@Url.Action("Index")?date=' + this.value;
+        });
+
+        // Select all checkbox
+        document.getElementById('selectAll').addEventListener('change', function() {
+            const checkboxes = document.querySelectorAll('.worker-checkbox');
+            const inputs = document.querySelectorAll('.hours-input, input[name="notes"]');
+            checkboxes.forEach((cb, i) => {
+                cb.checked = this.checked;
+                const row = cb.closest('.worker-row');
+                const hoursInput = row.querySelector('.hours-input');
+                const notesInput = row.querySelector('input[name="notes"]');
+                hoursInput.disabled = !this.checked;
+                notesInput.disabled = !this.checked;
+            });
+            updateSubmitButton();
+        });
+
+        // Individual checkbox
+        document.querySelectorAll('.worker-checkbox').forEach(cb => {
+            cb.addEventListener('change', function() {
+                const row = this.closest('.worker-row');
+                const hoursInput = row.querySelector('.hours-input');
+                const notesInput = row.querySelector('input[name="notes"]');
+                hoursInput.disabled = !this.checked;
+                notesInput.disabled = !this.checked;
+                updateSubmitButton();
+            });
+        });
+
+        // Hours input - update badge
+        document.querySelectorAll('.hours-input').forEach(input => {
+            input.addEventListener('input', function() {
+                const hours = parseFloat(this.value) || 0;
+                const badge = this.nextElementSibling;
+                
+                if (hours >= 8) {
+                    badge.textContent = '1 công';
+                    badge.className = 'input-group-text work-type-badge bg-success text-white';
+                } else if (hours == 4) {
+                    badge.textContent = '0.5 công';
+                    badge.className = 'input-group-text work-type-badge bg-warning text-dark';
+                } else {
+                    badge.textContent = hours + ' giờ';
+                    badge.className = 'input-group-text work-type-badge bg-info text-white';
+                }
+            });
+        });
+
+        // Update submit button
+        function updateSubmitButton() {
+            const count = document.querySelectorAll('.worker-checkbox:checked').length;
+            document.getElementById('selectedCount').textContent = count;
+            document.getElementById('submitBtn').disabled = count === 0;
+        }
+    </script>
+}

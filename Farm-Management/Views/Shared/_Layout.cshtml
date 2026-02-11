@@ -7,13 +7,14 @@
     <title>@ViewData["Title"] - Farm Management</title>
     <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
     <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
+    <link rel="stylesheet" href="~/css/dropdown-menu.css" asp-append-version="true" />
 
     @* Leaflet CSS - chỉ load khi cần *@
     @if (ViewData["LoadMap"] != null)
     {
         <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     }
-        
+
     @await RenderSectionAsync("Styles", required: false)
 </head>
 <body>
@@ -28,17 +29,45 @@
                 </button>
                 <div class="collapse navbar-collapse" id="navMenu">
                     <ul class="navbar-nav me-auto">
-                        <li class="nav-item">
-                            <a class="nav-link" asp-controller="Areas" asp-action="Index">📍 Vùng trồng</a>
+                        <!-- Dropdown: Quản lý cơ sở -->
+                        <li class="nav-item dropdown">
+                            <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown">
+                                🏗️ Cơ sở
+                            </a>
+                            <ul class="dropdown-menu">
+                                <li><a class="dropdown-item" asp-controller="Areas" asp-action="Index">📍 Vùng trồng</a></li>
+                                <li><a class="dropdown-item" asp-controller="PlantTypes" asp-action="Index">🌱 Loại cây</a></li>
+                                <li><a class="dropdown-item" asp-controller="Workers" asp-action="Index">👷 Công nhân</a></li>
+                                <li><a class="dropdown-item" asp-controller="WaterSources" asp-action="Index">💧 Nguồn nước</a></li>
+                            </ul>
                         </li>
-                        <li class="nav-item">
-                            <a class="nav-link" asp-controller="PlantTypes" asp-action="Index">🌱 Loại cây</a>
+
+                        <!-- Dropdown: Payroll -->
+                        <li class="nav-item dropdown">
+                            <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown">
+                                💰 Lương & Chấm công
+                            </a>
+                            <ul class="dropdown-menu">
+                                <li><a class="dropdown-item" asp-controller="Attendance" asp-action="Index">📋 Chấm công</a></li>
+                                <li><a class="dropdown-item" asp-controller="Payroll" asp-action="Index">💵 Bảng lương</a></li>
+                                <li><hr class="dropdown-divider"></li>
+                                <li><a class="dropdown-item" asp-controller="Payroll" asp-action="Reports">📊 Báo cáo lương</a></li>
+                            </ul>
                         </li>
-                        <li class="nav-item">
-                            <a class="nav-link" asp-controller="Workers" asp-action="Index">👷 Công nhân</a>
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link" asp-controller="WaterSources" asp-action="Index">💧 Nguồn nước</a>
+
+                        <!-- Dropdown: VietGAP (Future) -->
+                        <li class="nav-item dropdown">
+                            <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown">
+                                🌾 VietGAP
+                            </a>
+                            <ul class="dropdown-menu">
+                                <li><a class="dropdown-item" asp-controller="Plants" asp-action="Index">🌱 Lô cây</a></li>
+                                <li><a class="dropdown-item" asp-controller="Pesticides" asp-action="Index">🧪 Thuốc BVTV</a></li>
+                                <li><a class="dropdown-item" asp-controller="Fertilizers" asp-action="Index">🌿 Phân bón</a></li>
+                                <li><hr class="dropdown-divider"></li>
+                                <li><a class="dropdown-item" asp-controller="Harvest" asp-action="Index">📦 Thu hoạch</a></li>
+                                <li><a class="dropdown-item" asp-controller="Traceability" asp-action="Index">🔍 Truy xuất</a></li>
+                            </ul>
                         </li>
                     </ul>
                 </div>
@@ -52,9 +81,10 @@
         </main>
     </div>
 
-    <footer class="footer-farm text-center">
+    <footer class="footer text-center">
         <div class="container">
-            &copy; 2026 Farm Management - VietGAP
+            &copy; 2026 Farm Management - VietGAP |
+            <a asp-controller="Home" asp-action="Privacy" class="text-white">Chính sách</a>
         </div>
     </footer>
 

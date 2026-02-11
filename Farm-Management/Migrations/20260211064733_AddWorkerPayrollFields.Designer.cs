@@ -4,6 +4,7 @@ using Farm_Management.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace Farm_Management.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    partial class ApplicationDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260211064733_AddWorkerPayrollFields")]
+    partial class AddWorkerPayrollFields
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -61,43 +64,6 @@ namespace Farm_Management.Migrations
                     b.HasKey("Id");
 
                     b.ToTable("Areas");
-                });
-
-            modelBuilder.Entity("Farm_Management.Models.AttendanceLog", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
-
-                    b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("datetime2");
-
-                    b.Property<DateTime>("Date")
-                        .HasColumnType("datetime2");
-
-                    b.Property<decimal>("HoursWorked")
-                        .HasColumnType("decimal(4,2)");
-
-                    b.Property<string>("Notes")
-                        .HasMaxLength(500)
-                        .HasColumnType("nvarchar(500)");
-
-                    b.Property<string>("WorkType")
-                        .IsRequired()
-                        .HasMaxLength(20)
-                        .HasColumnType("nvarchar(20)");
-
-                    b.Property<int>("WorkerId")
-                        .HasColumnType("int");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("WorkerId", "Date")
-                        .IsUnique();
-
-                    b.ToTable("AttendanceLogs");
                 });
 
             modelBuilder.Entity("Farm_Management.Models.FertilizationLog", b =>
@@ -655,17 +621,6 @@ namespace Farm_Management.Migrations
                     b.ToTable("Workers");
                 });
 
-            modelBuilder.Entity("Farm_Management.Models.AttendanceLog", b =>
-                {
-                    b.HasOne("Farm_Management.Models.Worker", "Worker")
-                        .WithMany("AttendanceLogs")
-                        .HasForeignKey("WorkerId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
-
-                    b.Navigation("Worker");
-                });
-
             modelBuilder.Entity("Farm_Management.Models.FertilizationLog", b =>
                 {
                     b.HasOne("Farm_Management.Models.Fertilizer", "Fertilizer")
@@ -865,8 +820,6 @@ namespace Farm_Management.Migrations
 
             modelBuilder.Entity("Farm_Management.Models.Worker", b =>
                 {
-                    b.Navigation("AttendanceLogs");
-
                     b.Navigation("FertilizationLogs");
 
                     b.Navigation("HarvestBatches");

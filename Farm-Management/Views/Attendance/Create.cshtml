@@ -1,0 +1,99 @@
+﻿@model Farm_Management.Models.AttendanceLog
+@{
+    ViewData["Title"] = "Chấm công đơn lẻ";
+    var selectedDate = (DateTime)ViewBag.SelectedDate;
+}
+
+<div class="page-header">
+    <h2>📋 Chấm công đơn lẻ</h2>
+</div>
+
+<div class="form-container-center">
+    <div class="card">
+        <div class="card-header card-header-farm">
+            Thông tin chấm công - @selectedDate.ToString("dd/MM/yyyy")
+        </div>
+        <div class="card-body">
+            <form asp-action="Create">
+                <div asp-validation-summary="ModelOnly" class="text-danger mb-3"></div>
+
+                <input type="hidden" asp-for="Date" value="@selectedDate.ToString("yyyy-MM-dd")" />
+
+                <div class="mb-3">
+                    <label asp-for="WorkerId" class="form-label"></label>
+                    <select asp-for="WorkerId" class="form-select" asp-items="ViewBag.WorkerId">
+                        <option value="">-- Chọn công nhân --</option>
+                    </select>
+                    <span asp-validation-for="WorkerId" class="text-danger"></span>
+                </div>
+
+                <div class="mb-3">
+                    <label asp-for="HoursWorked" class="form-label"></label>
+                    <div class="input-group">
+                        <input asp-for="HoursWorked" class="form-control" type="number"
+                               step="0.5" min="0" max="24" value="8" id="hoursInput" />
+                        <span class="input-group-text" id="workTypeBadge">1 công</span>
+                    </div>
+                    <span asp-validation-for="HoursWorked" class="text-danger"></span>
+                </div>
+
+                <div class="mb-3">
+                    <label asp-for="Notes" class="form-label"></label>
+                    <textarea asp-for="Notes" class="form-control" rows="2"
+                              placeholder="VD: Tăng ca, làm ngoài giờ..."></textarea>
+                </div>
+
+                <!-- Work Type Preview -->
+                <div class="alert alert-info">
+                    <strong>📊 Phân loại tự động:</strong>
+                    <ul class="mb-0 mt-2">
+                        <li><strong>≥ 8 giờ:</strong> 1 ngày công (FullDay)</li>
+                        <li><strong>= 4 giờ:</strong> 0.5 ngày công (HalfDay)</li>
+                        <li><strong>< 4 giờ:</strong> Tính theo giờ lẻ (OddHours)</li>
+                    </ul>
+                </div>
+
+                <div class="d-flex gap-2 mt-4">
+                    <button type="submit" class="btn btn-farm">💾 Lưu chấm công</button>
+                    <a asp-action="Index" asp-route-date="@selectedDate.ToString("yyyy-MM-dd")"
+                       class="btn btn-outline-secondary">← Quay lại</a>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    @{
+        await Html.RenderPartialAsync("_ValidationScriptsPartial");
+    }
+
+    <script>
+        // Update badge based on hours
+        const hoursInput = document.getElementById('hoursInput');
+        const badge = document.getElementById('workTypeBadge');
+
+        hoursInput.addEventListener('input', updateBadge);
+
+        function updateBadge() {
+            const hours = parseFloat(hoursInput.value) || 0;
+
+            if (hours >= 8) {
+                badge.textContent = '1 công';
+                badge.className = 'input-group-text bg-success text-white';
+            } else if (hours == 4) {
+                badge.textContent = '0.5 công';
+                badge.className = 'input-group-text bg-warning text-dark';
+            } else if (hours > 0) {
+                badge.textContent = hours + ' giờ lẻ';
+                badge.className = 'input-group-text bg-info text-white';
+            } else {
+                badge.textContent = 'Chưa nhập';
+                badge.className = 'input-group-text bg-secondary text-white';
+            }
+        }
+
+        // Initial update
+        updateBadge();
+    </script>
+}
