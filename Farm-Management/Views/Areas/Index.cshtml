@@ -58,9 +58,7 @@ else
                         <td data-label="Diện tích">
                             @if (item.Acreage.HasValue)
                             {
-                                @item.Acreage.Value.ToString("N0")
-                    
-                                <small class="text-muted"> m²</small>
+                                @item.Acreage.Value.ToString("N0") <small class="text-muted"> m²</small>
                             }
                             else
                             {

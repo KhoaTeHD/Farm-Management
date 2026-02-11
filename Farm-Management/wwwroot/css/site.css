@@ -49,6 +49,15 @@ body {
     border-bottom: 3px solid var(--secondary-green);
 }
 
+    /* FIX: Navbar container không có nền trắng */
+    .navbar .container {
+        background-color: transparent !important;
+        box-shadow: none !important;
+        padding: 0 1rem !important;
+        margin: 0 auto !important;
+        border-radius: 0 !important;
+    }
+
 .navbar-brand {
     font-weight: 700;
     font-size: 1.5rem;
@@ -71,7 +80,7 @@ body {
     }
 
 .navbar-nav .nav-link {
-    color: rgba(255, 255, 255, 0.9) !important;
+    color: #ffffff !important;
     font-weight: 500;
     padding: 0.6rem 1.2rem !important;
     margin: 0 0.25rem;
@@ -388,7 +397,7 @@ h1 {
 
 /* --- Leaflet Map Picker --- */
 .map-picker-container {
-    border: 2px solid var(--farm-border);
+    border: 2px solid var(--border-color);
     border-radius: 10px;
     overflow: hidden;
     position: relative;
@@ -421,4 +430,290 @@ h1 {
 
 .leaflet-top, .leaflet-bottom {
     z-index: 2 !important;
+}
+
+/* === CUSTOM FARM BUTTONS === */
+.btn-farm {
+    background: linear-gradient(135deg, var(--primary-green) 0%, var(--secondary-green) 100%);
+    border: none;
+    color: #ffffff !important;
+    font-weight: 500;
+    padding: 0.6rem 1.5rem;
+    border-radius: 8px;
+    transition: all 0.3s ease;
+    box-shadow: var(--shadow-sm);
+    text-decoration: none;
+    display: inline-block;
+}
+
+    .btn-farm:hover {
+        background: linear-gradient(135deg, var(--primary-green-dark) 0%, var(--primary-green) 100%);
+        transform: translateY(-2px);
+        box-shadow: var(--shadow-md);
+        color: #ffffff !important;
+        text-decoration: none;
+    }
+
+    .btn-farm:focus,
+    .btn-farm:active {
+        background: var(--primary-green-dark);
+        box-shadow: 0 0 0 0.2rem rgba(45, 80, 22, 0.3);
+    }
+
+.btn-outline-farm {
+    background: transparent;
+    border: 2px solid var(--primary-green);
+    color: var(--primary-green) !important;
+    font-weight: 500;
+    padding: 0.5rem 1.2rem;
+    border-radius: 6px;
+    transition: all 0.3s ease;
+    text-decoration: none;
+    display: inline-block;
+}
+
+    .btn-outline-farm:hover {
+        background: var(--primary-green);
+        color: #ffffff !important;
+        transform: translateY(-1px);
+        text-decoration: none;
+    }
+
+/* Page Header với button */
+.page-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 2rem;
+    padding-bottom: 1rem;
+    border-bottom: 2px solid var(--border-color);
+}
+
+    .page-header h2 {
+        margin: 0;
+        color: var(--primary-green);
+    }
+
+/* Responsive cho mobile */
+@media (max-width: 576px) {
+    .page-header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 1rem;
+    }
+
+        .page-header .btn-farm {
+            width: 100%;
+            text-align: center;
+        }
+}
+
+/* === CUSTOM FARM BUTTONS === */
+.btn-farm {
+    background: linear-gradient(135deg, var(--primary-green) 0%, var(--secondary-green) 100%);
+    border: none;
+    color: #ffffff !important;
+    font-weight: 500;
+    padding: 0.6rem 1.5rem;
+    border-radius: 8px;
+    transition: all 0.3s ease;
+    box-shadow: var(--shadow-sm);
+    text-decoration: none;
+    display: inline-block;
+}
+
+    .btn-farm:hover {
+        background: linear-gradient(135deg, var(--primary-green-dark) 0%, var(--primary-green) 100%);
+        transform: translateY(-2px);
+        box-shadow: var(--shadow-md);
+        color: #ffffff !important;
+        text-decoration: none;
+    }
+
+    .btn-farm:focus,
+    .btn-farm:active {
+        background: var(--primary-green-dark);
+        box-shadow: 0 0 0 0.2rem rgba(45, 80, 22, 0.3);
+    }
+
+.btn-outline-farm {
+    background: transparent;
+    border: 2px solid var(--primary-green);
+    color: var(--primary-green) !important;
+    font-weight: 500;
+    padding: 0.5rem 1.2rem;
+    border-radius: 6px;
+    transition: all 0.3s ease;
+    text-decoration: none;
+    display: inline-block;
+}
+
+    .btn-outline-farm:hover {
+        background: var(--primary-green);
+        color: #ffffff !important;
+        transform: translateY(-1px);
+        text-decoration: none;
+    }
+
+/* Page Header với button */
+.page-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 2rem;
+    padding-bottom: 1rem;
+    border-bottom: 2px solid var(--border-color);
+}
+
+    .page-header h2 {
+        margin: 0;
+        color: var(--primary-green);
+    }
+
+/* === ALERTS FARM === */
+.alert-farm-success {
+    background-color: rgba(82, 164, 71, 0.1);
+    border-left: 4px solid var(--success-green);
+    color: var(--text-dark);
+    padding: 1rem;
+    border-radius: 8px;
+    margin-bottom: 1rem;
+}
+
+.alert-farm-error {
+    background-color: rgba(217, 83, 79, 0.1);
+    border-left: 4px solid #d9534f;
+    color: var(--text-dark);
+    padding: 1rem;
+    border-radius: 8px;
+    margin-bottom: 1rem;
+}
+
+/* === TABLE FARM === */
+.table-farm {
+    background: white;
+    border-radius: 8px;
+    overflow: hidden;
+}
+
+    .table-farm thead {
+        background: linear-gradient(135deg, var(--primary-green) 0%, var(--secondary-green) 100%);
+    }
+
+        .table-farm thead th {
+            color: white;
+            font-weight: 600;
+            padding: 1rem;
+            border: none;
+        }
+
+    .table-farm tbody td {
+        padding: 0.8rem 1rem;
+        vertical-align: middle;
+    }
+
+    .table-farm tbody tr:hover {
+        background-color: rgba(107, 157, 62, 0.05);
+    }
+
+/* === CARD FARM === */
+.card-header-farm {
+    background: linear-gradient(135deg, var(--primary-green) 0%, var(--secondary-green) 100%);
+    color: white;
+    font-weight: 600;
+    padding: 1rem;
+}
+
+.badge-farm {
+    background: var(--accent-green);
+    color: white;
+    padding: 0.4rem 0.8rem;
+    border-radius: 6px;
+    font-weight: 500;
+}
+
+/* === EMPTY STATE === */
+.empty-state {
+    text-align: center;
+    padding: 3rem 1rem;
+    background: var(--bg-light);
+    border-radius: 12px;
+    border: 2px dashed var(--border-color);
+}
+
+    .empty-state .icon {
+        font-size: 4rem;
+        margin-bottom: 1rem;
+    }
+
+    .empty-state h5 {
+        color: var(--primary-green);
+        margin-bottom: 0.5rem;
+    }
+
+/* === ACTION BUTTONS === */
+.action-buttons .btn-sm {
+    padding: 0.4rem 0.8rem;
+    font-size: 0.875rem;
+}
+
+/* === NAVBAR FARM === */
+.navbar-farm {
+    background: linear-gradient(135deg, var(--primary-green) 0%, var(--primary-green-light) 100%) !important;
+    box-shadow: var(--shadow-md);
+    border-bottom: 3px solid var(--secondary-green);
+}
+
+/* Responsive cho mobile */
+@media (max-width: 576px) {
+    .page-header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 1rem;
+    }
+
+        .page-header .btn-farm {
+            width: 100%;
+            text-align: center;
+        }
+}
+
+/* Mobile responsive table */
+@media (max-width: 768px) {
+    .table-responsive-card {
+        display: block;
+    }
+
+        .table-responsive-card thead {
+            display: none;
+        }
+
+        .table-responsive-card tbody tr {
+            display: block;
+            margin-bottom: 1rem;
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            padding: 1rem;
+        }
+
+        .table-responsive-card tbody td {
+            display: block;
+            text-align: right;
+            padding: 0.5rem 0;
+            border: none;
+        }
+
+            .table-responsive-card tbody td::before {
+                content: attr(data-label);
+                float: left;
+                font-weight: 600;
+                color: var(--primary-green);
+            }
+
+            .table-responsive-card tbody td:last-child {
+                text-align: center;
+                padding-top: 1rem;
+                margin-top: 1rem;
+                border-top: 1px solid var(--border-color);
+            }
 }
