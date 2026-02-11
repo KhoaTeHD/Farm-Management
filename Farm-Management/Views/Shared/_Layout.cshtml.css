@@ -1,48 +1,94 @@
-﻿/* Please see documentation at https://learn.microsoft.com/aspnet/core/client-side/bundling-and-minification
-for details on configuring this project to bundle and minify static web assets. */
+﻿/* ============================================
+   LAYOUT SPECIFIC STYLES
+   Farm Management System
+   ============================================ */
 
+/* Navbar customization */
 a.navbar-brand {
-  white-space: normal;
-  text-align: center;
-  word-break: break-all;
+    white-space: normal;
+    text-align: center;
+    word-break: break-all;
 }
 
+/* Link colors */
 a {
-  color: #0077cc;
+    color: var(--secondary-green, #4a7c2c);
+    transition: color 0.3s ease;
 }
 
+    a:hover {
+        color: var(--primary-green-dark, #1d3810);
+        text-decoration: none;
+    }
+
+/* Primary button override */
 .btn-primary {
-  color: #fff;
-  background-color: #1b6ec2;
-  border-color: #1861ac;
+    color: #fff;
+    background: linear-gradient(135deg, #2d5016 0%, #4a7c2c 100%);
+    border: none;
 }
 
-.nav-pills .nav-link.active, .nav-pills .show > .nav-link {
-  color: #fff;
-  background-color: #1b6ec2;
-  border-color: #1861ac;
+    .btn-primary:hover,
+    .btn-primary:focus,
+    .btn-primary:active {
+        background: linear-gradient(135deg, #1d3810 0%, #2d5016 100%);
+        border: none;
+    }
+
+/* Navigation pills */
+.nav-pills .nav-link.active,
+.nav-pills .show > .nav-link {
+    color: #fff;
+    background: linear-gradient(135deg, #2d5016 0%, #4a7c2c 100%);
+    border: none;
 }
 
+/* Borders */
 .border-top {
-  border-top: 1px solid #e5e5e5;
+    border-top: 1px solid #d4e2cc !important;
 }
+
 .border-bottom {
-  border-bottom: 1px solid #e5e5e5;
+    border-bottom: 1px solid #d4e2cc !important;
 }
 
+/* Box shadow */
 .box-shadow {
-  box-shadow: 0 .25rem .75rem rgba(0, 0, 0, .05);
+    box-shadow: 0 4px 6px rgba(45, 80, 22, 0.15);
 }
 
+/* Cookie policy button */
 button.accept-policy {
-  font-size: 1rem;
-  line-height: inherit;
+    font-size: 1rem;
+    line-height: inherit;
+    background-color: var(--success-green, #52a447);
+    border: none;
+    color: white;
+    padding: 0.5rem 1.5rem;
+    border-radius: 6px;
+    transition: all 0.3s ease;
 }
 
+    button.accept-policy:hover {
+        background-color: var(--secondary-green, #4a7c2c);
+        transform: translateY(-2px);
+        box-shadow: 0 4px 8px rgba(45, 80, 22, 0.2);
+    }
+
+/* Footer specific */
 .footer {
-  position: absolute;
-  bottom: 0;
-  width: 100%;
-  white-space: nowrap;
-  line-height: 60px;
+    position: absolute;
+    bottom: 0;
+    width: 100%;
+    white-space: nowrap;
+    line-height: 60px;
+}
+
+/* Responsive adjustments for footer */
+@media (max-width: 768px) {
+    .footer {
+        white-space: normal;
+        line-height: 1.5;
+        padding: 1rem 0;
+    }
 }

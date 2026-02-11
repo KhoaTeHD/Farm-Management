@@ -1,4 +1,392 @@
-﻿/* --- Leaflet Map Picker --- */
+﻿/* ============================================
+   FARM MANAGEMENT SYSTEM - CSS THEME
+   Màu chủ đạo: Xanh lá nông nghiệp
+   ============================================ */
+
+/* === ROOT VARIABLES === */
+:root {
+    --primary-green: #2d5016;
+    --primary-green-light: #3d6b21;
+    --primary-green-dark: #1d3810;
+    --secondary-green: #4a7c2c;
+    --accent-green: #6b9d3e;
+    --success-green: #52a447;
+    --bg-light: #f4f7f2;
+    --bg-card: #ffffff;
+    --text-dark: #2c3e20;
+    --text-muted: #6c757d;
+    --border-color: #d4e2cc;
+    --shadow-sm: 0 2px 4px rgba(45, 80, 22, 0.1);
+    --shadow-md: 0 4px 6px rgba(45, 80, 22, 0.15);
+    --shadow-lg: 0 8px 16px rgba(45, 80, 22, 0.2);
+}
+
+/* === BASE STYLES === */
+html {
+    font-size: 14px;
+    position: relative;
+    min-height: 100%;
+}
+
+@media (min-width: 768px) {
+    html {
+        font-size: 16px;
+    }
+}
+
+body {
+    margin-bottom: 80px;
+    background-color: var(--bg-light);
+    color: var(--text-dark);
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+
+/* === HEADER & NAVIGATION === */
+.navbar {
+    background: linear-gradient(135deg, var(--primary-green) 0%, var(--primary-green-light) 100%) !important;
+    box-shadow: var(--shadow-md);
+    padding: 0.75rem 0;
+    border-bottom: 3px solid var(--secondary-green);
+}
+
+.navbar-brand {
+    font-weight: 700;
+    font-size: 1.5rem;
+    color: #ffffff !important;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    padding: 0.5rem 1rem;
+    border-radius: 8px;
+    transition: all 0.3s ease;
+}
+
+    .navbar-brand:hover {
+        background-color: rgba(255, 255, 255, 0.1);
+        transform: translateY(-2px);
+    }
+
+    .navbar-brand::before {
+        content: "🌾 ";
+        font-size: 1.3rem;
+    }
+
+.navbar-nav .nav-link {
+    color: rgba(255, 255, 255, 0.9) !important;
+    font-weight: 500;
+    padding: 0.6rem 1.2rem !important;
+    margin: 0 0.25rem;
+    border-radius: 6px;
+    transition: all 0.3s ease;
+}
+
+    .navbar-nav .nav-link:hover {
+        background-color: rgba(255, 255, 255, 0.15);
+        color: #ffffff !important;
+        transform: translateY(-1px);
+    }
+
+    .navbar-nav .nav-link.active {
+        background-color: var(--accent-green);
+        color: #ffffff !important;
+        font-weight: 600;
+    }
+
+/* === MAIN CONTENT === */
+.container {
+    background-color: var(--bg-card);
+    padding: 2rem;
+    border-radius: 12px;
+    box-shadow: var(--shadow-sm);
+    margin-top: 2rem;
+    margin-bottom: 2rem;
+}
+
+main {
+    min-height: calc(100vh - 280px);
+}
+
+/* === HEADINGS === */
+h1, h2, h3, h4, h5, h6 {
+    color: var(--primary-green);
+    font-weight: 600;
+    margin-bottom: 1rem;
+}
+
+h1 {
+    font-size: 2.5rem;
+    border-bottom: 3px solid var(--accent-green);
+    padding-bottom: 0.5rem;
+    margin-bottom: 1.5rem;
+}
+
+.display-4 {
+    color: var(--primary-green-dark);
+    font-weight: 700;
+}
+
+/* === BUTTONS === */
+.btn-primary {
+    background: linear-gradient(135deg, var(--primary-green) 0%, var(--secondary-green) 100%);
+    border: none;
+    color: #ffffff;
+    font-weight: 500;
+    padding: 0.6rem 1.5rem;
+    border-radius: 8px;
+    transition: all 0.3s ease;
+    box-shadow: var(--shadow-sm);
+}
+
+    .btn-primary:hover {
+        background: linear-gradient(135deg, var(--primary-green-dark) 0%, var(--primary-green) 100%);
+        transform: translateY(-2px);
+        box-shadow: var(--shadow-md);
+    }
+
+    .btn-primary:focus,
+    .btn-primary:active {
+        background: var(--primary-green-dark);
+        box-shadow: 0 0 0 0.2rem rgba(45, 80, 22, 0.3);
+    }
+
+.btn-success {
+    background-color: var(--success-green);
+    border-color: var(--success-green);
+}
+
+    .btn-success:hover {
+        background-color: var(--secondary-green);
+        border-color: var(--secondary-green);
+    }
+
+/* === FORMS === */
+.form-control:focus,
+.form-check-input:focus {
+    border-color: var(--accent-green);
+    box-shadow: 0 0 0 0.2rem rgba(107, 157, 62, 0.25);
+}
+
+.form-label {
+    font-weight: 500;
+    color: var(--primary-green);
+    margin-bottom: 0.5rem;
+}
+
+/* === CARDS === */
+.card {
+    border: 1px solid var(--border-color);
+    border-radius: 12px;
+    box-shadow: var(--shadow-sm);
+    transition: all 0.3s ease;
+}
+
+    .card:hover {
+        box-shadow: var(--shadow-md);
+        transform: translateY(-4px);
+    }
+
+.card-header {
+    background: linear-gradient(135deg, var(--primary-green) 0%, var(--secondary-green) 100%);
+    color: #ffffff;
+    font-weight: 600;
+    border-radius: 12px 12px 0 0 !important;
+    border-bottom: none;
+}
+
+/* === TABLES === */
+.table {
+    border-radius: 8px;
+    overflow: hidden;
+}
+
+    .table thead th {
+        background-color: var(--primary-green);
+        color: #ffffff;
+        font-weight: 600;
+        border: none;
+        padding: 1rem;
+    }
+
+    .table tbody tr {
+        transition: background-color 0.2s ease;
+    }
+
+        .table tbody tr:hover {
+            background-color: rgba(107, 157, 62, 0.1);
+        }
+
+/* === ALERTS === */
+.alert {
+    border-radius: 8px;
+    border-left: 4px solid;
+}
+
+.alert-success {
+    border-left-color: var(--success-green);
+    background-color: rgba(82, 164, 71, 0.1);
+}
+
+.alert-warning {
+    border-left-color: #f0ad4e;
+}
+
+.alert-danger {
+    border-left-color: #d9534f;
+}
+
+/* === BADGES === */
+.badge {
+    padding: 0.5rem 0.8rem;
+    font-weight: 500;
+    border-radius: 6px;
+}
+
+.badge-success {
+    background-color: var(--success-green);
+}
+
+/* === FOOTER === */
+.footer {
+    position: absolute;
+    bottom: 0;
+    width: 100%;
+    background: linear-gradient(135deg, var(--primary-green-dark) 0%, var(--primary-green) 100%);
+    color: rgba(255, 255, 255, 0.9);
+    padding: 1.5rem 0;
+    border-top: 3px solid var(--accent-green);
+    box-shadow: 0 -4px 8px rgba(45, 80, 22, 0.15);
+}
+
+    .footer a {
+        color: #ffffff;
+        font-weight: 500;
+        text-decoration: none;
+        transition: all 0.3s ease;
+        padding: 0.25rem 0.5rem;
+        border-radius: 4px;
+    }
+
+        .footer a:hover {
+            background-color: rgba(255, 255, 255, 0.1);
+            color: #ffffff;
+            text-decoration: none;
+        }
+
+    .footer .container {
+        background-color: transparent;
+        box-shadow: none;
+        padding: 0;
+        margin: 0 auto;
+    }
+
+/* === UTILITIES === */
+.text-primary {
+    color: var(--primary-green) !important;
+}
+
+.bg-primary {
+    background-color: var(--primary-green) !important;
+}
+
+.border-primary {
+    border-color: var(--primary-green) !important;
+}
+
+/* === ANIMATIONS === */
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(10px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.fade-in {
+    animation: fadeIn 0.5s ease-in;
+}
+
+/* === SCROLLBAR === */
+::-webkit-scrollbar {
+    width: 10px;
+    height: 10px;
+}
+
+::-webkit-scrollbar-track {
+    background: var(--bg-light);
+}
+
+::-webkit-scrollbar-thumb {
+    background: var(--accent-green);
+    border-radius: 5px;
+}
+
+    ::-webkit-scrollbar-thumb:hover {
+        background: var(--secondary-green);
+    }
+
+/* === RESPONSIVE === */
+@media (max-width: 768px) {
+    .container {
+        padding: 1rem;
+        margin-top: 1rem;
+    }
+
+    h1 {
+        font-size: 2rem;
+    }
+
+    .navbar-brand {
+        font-size: 1.2rem;
+    }
+
+    .footer {
+        padding: 1rem 0;
+        line-height: 1.5;
+    }
+}
+
+/* === CUSTOM COMPONENTS === */
+.farm-card {
+    background: linear-gradient(135deg, #ffffff 0%, var(--bg-light) 100%);
+    border: 2px solid var(--border-color);
+    border-radius: 12px;
+    padding: 1.5rem;
+    margin-bottom: 1.5rem;
+    transition: all 0.3s ease;
+}
+
+    .farm-card:hover {
+        border-color: var(--accent-green);
+        box-shadow: var(--shadow-lg);
+    }
+
+.icon-box {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 50px;
+    height: 50px;
+    background: linear-gradient(135deg, var(--accent-green) 0%, var(--secondary-green) 100%);
+    border-radius: 12px;
+    color: #ffffff;
+    font-size: 1.5rem;
+    margin-right: 1rem;
+}
+
+.status-active {
+    color: var(--success-green);
+    font-weight: 600;
+}
+
+.status-inactive {
+    color: var(--text-muted);
+    font-weight: 500;
+}
+
+/* --- Leaflet Map Picker --- */
 .map-picker-container {
     border: 2px solid var(--farm-border);
     border-radius: 10px;
