@@ -1,11 +1,12 @@
-﻿using System;
-using System.Linq;
-using System.Threading.Tasks;
+﻿using Farm_Management.Data;
+using Farm_Management.Models;
+using Farm_Management.Models.ViewModels;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
-using Farm_Management.Data;
-using Farm_Management.Models;
+using System;
+using System.Linq;
+using System.Threading.Tasks;
 
 namespace Farm_Management.Controllers
 {
@@ -41,6 +42,129 @@ namespace Farm_Management.Controllers
             ViewBag.AvailableWorkers = availableWorkers;
 
             return View(logs);
+        }
+
+        // GET: Attendance/Calendar
+        // Hiển thị lịch chấm công theo tháng
+        public async Task<IActionResult> Calendar(int? year, int? month)
+        {
+            var selectedYear = year ?? DateTime.Today.Year;
+            var selectedMonth = month ?? DateTime.Today.Month;
+
+            var firstDay = new DateTime(selectedYear, selectedMonth, 1);
+            var daysInMonth = DateTime.DaysInMonth(selectedYear, selectedMonth);
+
+            // Lấy tất cả workers đang active
+            var workers = await _context.Workers
+                .Where(w => w.IsActive)
+                .OrderBy(w => w.Code)
+                .ToListAsync();
+
+            // Lấy tất cả attendance logs trong tháng này
+            var logs = await _context.AttendanceLogs
+                .Where(a => a.Date.Year == selectedYear && a.Date.Month == selectedMonth)
+                .ToListAsync();
+
+            // Convert logs thành Dictionary để tra cứu nhanh
+            var logsDictionary = new Dictionary<(int WorkerId, int Day), AttendanceLog>();
+            foreach (var log in logs)
+            {
+                logsDictionary[(log.WorkerId, log.Date.Day)] = log;
+            }
+
+            var viewModel = new AttendanceCalendarViewModel
+            {
+                Year = selectedYear,
+                Month = selectedMonth,
+                DaysInMonth = daysInMonth,
+                Workers = workers,
+                Logs = logsDictionary
+            };
+
+            return View(viewModel);
+        }
+
+        // POST: Attendance/SaveCell
+        // AJAX endpoint để lưu từng ô
+        [HttpPost]
+        public async Task<IActionResult> SaveCell(int workerId, string date, decimal hours)
+        {
+            try
+            {
+                // Parse date
+                if (!DateTime.TryParse(date, out var parsedDate))
+                {
+                    return Json(new { success = false, message = "Ngày không hợp lệ" });
+                }
+
+                // Validate hours
+                if (hours < 0 || hours > 24)
+                {
+                    return Json(new { success = false, message = "Số giờ phải từ 0-24" });
+                }
+
+                // Tìm log hiện tại
+                var log = await _context.AttendanceLogs
+                    .FirstOrDefaultAsync(a => a.WorkerId == workerId && a.Date == parsedDate);
+
+                if (hours == 0)
+                {
+                    // Nếu hours = 0 → Xóa log nếu tồn tại
+                    if (log != null)
+                    {
+                        _context.AttendanceLogs.Remove(log);
+                        await _context.SaveChangesAsync();
+                    }
+
+                    return Json(new
+                    {
+                        success = true,
+                        workType = "",
+                        message = "Đã xóa chấm công"
+                    });
+                }
+                else
+                {
+                    // Classify work type
+                    var workType = ClassifyWorkType(hours);
+
+                    if (log == null)
+                    {
+                        // Tạo mới
+                        log = new AttendanceLog
+                        {
+                            WorkerId = workerId,
+                            Date = parsedDate,
+                            HoursWorked = hours,
+                            WorkType = workType
+                        };
+                        _context.AttendanceLogs.Add(log);
+                    }
+                    else
+                    {
+                        // Cập nhật
+                        log.HoursWorked = hours;
+                        log.WorkType = workType;
+                    }
+
+                    await _context.SaveChangesAsync();
+
+                    return Json(new
+                    {
+                        success = true,
+                        workType = workType,
+                        message = "Lưu thành công"
+                    });
+                }
+            }
+            catch (Exception ex)
+            {
+                return Json(new
+                {
+                    success = false,
+                    message = $"Lỗi: {ex.Message}"
+                });
+            }
         }
 
         // POST: Attendance/MarkAttendance
