@@ -1,82 +1,10 @@
-﻿@model IEnumerable<Farm_Management.Models.Worker>
-@{
-    ViewData["Title"] = "Công nhân";
-}
-
-<div class="page-header">
-    <h2>👷 Công nhân</h2>
-    <a asp-action="Create" class="btn btn-farm">+ Thêm công nhân</a>
+@model IEnumerable<Farm_Management.Models.Worker>
+@{ ViewData["Title"] = "Công nhân"; var workers = Model.ToList(); }
+<div class="page-header"><div><p class="eyebrow">ĐỘI NGŨ TRANG TRẠI</p><h1>Công nhân</h1><p class="page-description">Thông tin liên hệ, mức lương và trạng thái làm việc ở cùng một nơi.</p></div><a asp-action="Create" class="btn btn-farm"><svg class="icon"><use href="#i-plus" /></svg>Thêm công nhân</a></div>
+<div class="card" data-list data-page-size="10">
+    <div class="list-toolbar"><div class="search-field"><svg class="icon"><use href="#i-search" /></svg><input class="form-control" type="search" data-list-search placeholder="Tìm họ tên, mã hoặc số điện thoại…" aria-label="Tìm công nhân" /></div><div class="toolbar-controls"><select class="form-select" data-list-status aria-label="Lọc trạng thái làm việc"><option value="">Tất cả trạng thái</option><option value="active">Đang làm việc</option><option value="inactive">Đã nghỉ việc</option><option value="unknown">Chưa có trạng thái</option></select><span class="result-count">@workers.Count người</span></div></div>
+    @if(!workers.Any()){<div class="empty-state"><svg class="icon empty-icon"><use href="#i-users" /></svg><h3>Đội ngũ của bạn bắt đầu từ đây</h3><p>Thêm thông tin công nhân và mức lương ngày trước khi bắt đầu chấm công.</p><a asp-action="Create" class="btn btn-farm">Thêm công nhân đầu tiên</a></div>}
+    else {<div class="table-responsive"><table class="table table-farm table-responsive-card"><thead><tr><th>Công nhân</th><th>Mã công nhân</th><th>Số điện thoại</th><th>Lương ngày</th><th>Trạng thái</th><th class="text-end">Thao tác</th></tr></thead><tbody>
+    @foreach(var worker in workers){<tr data-list-row data-search="@worker.FullName @worker.Code @worker.Phone" data-status="@(worker.IsActive == true ? "active" : worker.IsActive == false ? "inactive" : "unknown")"><td data-label="Công nhân"><a asp-action="Details" asp-route-id="@worker.Id" class="fw-bold">@(worker.FullName ?? "Chưa có họ tên")</a><small class="d-block text-muted mt-1">@(worker.HireDate.HasValue ? "Vào làm " + worker.HireDate.Value.ToString("dd/MM/yyyy") : "Chưa có ngày vào làm")</small></td><td data-label="Mã công nhân">@(worker.Code ?? "—")</td><td data-label="Liên hệ">@(worker.Phone ?? "Chưa cập nhật")</td><td data-label="Lương ngày"><strong class="text-success">@(worker.DailySalary?.ToString("N0", System.Globalization.CultureInfo.GetCultureInfo("vi-VN")) ?? "—")</strong> <small class="text-muted">đ / ngày</small></td><td data-label="Trạng thái">@if(worker.IsActive == true){<span class="badge bg-success">Đang làm việc</span>}else if(worker.IsActive == false){<span class="badge bg-secondary">Đã nghỉ việc</span>}else{<span class="badge bg-warning">Chưa có trạng thái</span>}</td><td class="text-end" data-label=""><div class="action-buttons d-inline-flex gap-2"><a asp-action="Edit" asp-route-id="@worker.Id" class="btn btn-sm btn-outline-farm" aria-label="Sửa công nhân @(worker.FullName)"><svg class="icon"><use href="#i-edit" /></svg>Sửa</a><a asp-action="Delete" asp-route-id="@worker.Id" class="btn btn-sm btn-outline-danger" aria-label="Xóa công nhân @(worker.FullName)"><svg class="icon"><use href="#i-trash" /></svg>Xóa</a></div></td></tr>}
+    </tbody></table></div><div class="filter-empty" data-list-empty hidden>Không tìm thấy công nhân phù hợp. Hãy thử tên, mã hoặc trạng thái khác.</div><div class="list-footer"><span data-list-count></span><div class="list-pagination"><button type="button" class="btn btn-sm btn-outline-secondary" data-list-prev>← Trước</button><span data-list-page></span><button type="button" class="btn btn-sm btn-outline-secondary" data-list-next>Sau →</button></div></div>}
 </div>
-
-@if (TempData["Success"] != null)
-{
-    <div class="alert alert-farm-success alert-dismissible fade show">
-        ✅ @TempData["Success"]
-        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-    </div>
-}
-@if (TempData["Error"] != null)
-{
-    <div class="alert alert-farm-error alert-dismissible fade show">
-        ❌ @TempData["Error"]
-        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-    </div>
-}
-
-@if (!Model.Any())
-{
-    <div class="empty-state">
-        <div class="icon">👷</div>
-        <h5>Chưa có công nhân nào</h5>
-        <p class="text-muted">Hãy thêm công nhân đầu tiên!</p>
-        <a asp-action="Create" class="btn btn-farm">+ Thêm công nhân</a>
-    </div>
-}
-else
-{
-    <div class="table-responsive">
-        <table class="table table-farm table-responsive-card">
-            <thead>
-                <tr>
-                    <th>Mã CN</th>
-                    <th>Họ tên</th>
-                    <th>SĐT</th>
-                    <th>Lương ngày</th>
-                    <th>Trạng thái</th>
-                    <th class="text-end">Thao tác</th>
-                </tr>
-            </thead>
-            <tbody>
-                @foreach (var worker in Model)
-                {
-                    <tr>
-                        <td data-label="Mã CN">
-                            <strong>@worker.Code</strong>
-                        </td>
-                        <td data-label="Họ tên">@worker.FullName</td>
-                        <td data-label="SĐT">@(worker.Phone ?? "—")</td>
-                        <td data-label="Lương ngày">
-                            <span class="fw-bold text-success">@worker.DailySalary.ToString("N0") đ</span>
-                        </td>
-                        <td data-label="Trạng thái">
-                            @if (worker.IsActive)
-                            {
-                                <span class="badge bg-success">Đang làm</span>
-                            }
-                            else
-                            {
-                                <span class="badge bg-secondary">Nghỉ việc</span>
-                            }
-                        </td>
-                        <td data-label="" class="text-end">
-                            <div class="action-buttons d-inline-flex gap-1">
-                                <a asp-action="Edit" asp-route-id="@worker.Id" class="btn btn-sm btn-outline-farm">Sửa</a>
-                                <a asp-action="Delete" asp-route-id="@worker.Id" class="btn btn-sm btn-outline-danger">Xóa</a>
-                            </div>
-                        </td>
-                    </tr>
-                }
-            </tbody>
-        </table>
-    </div>
-}

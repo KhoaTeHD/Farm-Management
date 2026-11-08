@@ -361,3 +361,9 @@ MigrationBackup/
 
 # Fody - auto-generated XML schema
 FodyWeavers.xsd
+
+# Machine-local SQL credentials and runtime output
+/Farm-Management/appsettings.Local.json
+/.local/
+# Farmer-uploaded photos belong to local runtime data, not source control.
+Farm-Management/wwwroot/uploads/

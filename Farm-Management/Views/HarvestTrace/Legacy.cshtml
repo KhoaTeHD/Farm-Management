@@ -1,0 +1,3 @@
+@model Farm_Management.Models.HarvestBatch
+@{ViewData["Title"]="Cấp mã đợt thu hoạch cũ";}
+<div class="page-header"><h1>Cấp mã đợt thu hoạch từ sổ cũ</h1></div><form method="post" asp-action="CreateLegacy" asp-route-id="@Model.Id" class="card"><div class="form-section"><p>Ngày @(Model.HarvestDate?.ToString("dd/MM/yyyy")??"chưa có") · @(Model.YieldKg?.ToString()??"chưa có lượng") kg · lô #@Model.PlantId.</p><p>Hệ thống giữ nguyên dữ liệu cũ; phần thiếu sẽ được ghi rõ, không tự xác nhận đạt.</p></div><partial name="_RecordChange"/><div class="form-actions"><button type="submit" class="btn btn-farm">Kiểm tra và cấp mã</button></div></form>

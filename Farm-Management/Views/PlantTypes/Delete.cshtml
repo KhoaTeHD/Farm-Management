@@ -1,0 +1,3 @@
+@model Farm_Management.Models.PlantType
+@{ViewData["Title"]="Xóa loại cây?";}
+<partial name="_DeletePanel" model='new Farm_Management.Models.ViewModels.DeleteConfirmationViewModel { Id=Model.Id, Title="Xóa loại cây?", Description="Kiểm tra đúng bản ghi trước khi xóa.", Notice="Loại cây đang được giống hoặc lô cây sử dụng sẽ không thể xóa.", Items=new(){("Tên loại cây", Model.Name??"Thiếu tên"), ("Chu kỳ", Model.GrowthCycleDays?.ToString()??"Chưa xác định")} }'/>

@@ -1,0 +1,3 @@
+@model int
+@{ ViewData["Title"] = Model == 404 ? "Không tìm thấy trang" : "Yêu cầu chưa hợp lệ"; }
+<section class="card"><div class="empty-state"><svg class="icon empty-icon"><use href="#i-map" /></svg><p class="eyebrow">@Model</p><h1>@ViewData["Title"]</h1><p>@(Model == 404 ? "Trang này không tồn tại hoặc bản ghi đã được thay đổi. Bạn có thể quay lại tổng quan để tiếp tục." : "Hãy kiểm tra dữ liệu và thử lại thao tác từ màn hình chính.")</p><a asp-controller="Home" asp-action="Index" class="btn btn-farm">Về tổng quan</a></div></section>

@@ -1,82 +1,11 @@
-﻿@model Farm_Management.Models.Area
+@model Farm_Management.Models.ViewModels.AreaForm
 @{
-    ViewData["Title"] = "Thêm vùng trồng";
-    ViewData["LoadMap"] = true;
-}
-
-<div class="page-header">
-    <h2>📍 Thêm vùng trồng mới</h2>
-</div>
-
-<div class="form-container-center">
-    <div class="card">
-        <div class="card-header card-header-farm">Thông tin vùng trồng</div>
-        <div class="card-body">
-            <form asp-action="Create">
-                <div asp-validation-summary="ModelOnly" class="text-danger mb-3"></div>
-
-                <div class="mb-3">
-                    <label asp-for="Name" class="form-label"></label>
-                    <input asp-for="Name" class="form-control" placeholder="VD: Vùng A - Rau ăn lá" />
-                    <span asp-validation-for="Name" class="text-danger"></span>
-                </div>
-
-                <div class="row">
-                    <div class="col-md-6 mb-3">
-                        <label asp-for="Acreage" class="form-label"></label>
-                        <div class="input-group">
-                            <input asp-for="Acreage" class="form-control" type="number" step="0.01" />
-                            <span class="input-group-text">m²</span>
-                        </div>
-                    </div>
-                    <div class="col-md-6 mb-3">
-                        <label asp-for="SoilType" class="form-label"></label>
-                        <select asp-for="SoilType" class="form-select">
-                            <option value="">-- Chọn loại đất --</option>
-                            <option>Đất phù sa</option>
-                            <option>Đất thịt</option>
-                            <option>Đất cát pha</option>
-                            <option>Đất sét</option>
-                            <option>Đất đỏ bazan</option>
-                        </select>
-                    </div>
-                </div>
-
-                <!-- Google Maps Picker -->
-                <div class="mb-3">
-                    <label class="form-label">Tọa độ GPS</label>
-                    @await Html.PartialAsync("_MapPickerPartial")
-                    <input asp-for="GpsCoordinates" type="hidden" />
-                </div>
-
-                <div class="row">
-                    <div class="col-md-6 mb-3">
-                        <label asp-for="SoilTestDate" class="form-label"></label>
-                        <input asp-for="SoilTestDate" class="form-control" type="date" />
-                    </div>
-                    <div class="col-md-6 mb-3">
-                        <label asp-for="SoilTestResult" class="form-label"></label>
-                        <textarea asp-for="SoilTestResult" class="form-control" rows="2"
-                                  placeholder="VD: pH 6.5, N cao, P trung bình"></textarea>
-                    </div>
-                </div>
-
-                <div class="mb-3">
-                    <label asp-for="Notes" class="form-label"></label>
-                    <textarea asp-for="Notes" class="form-control" rows="2"></textarea>
-                </div>
-
-                <div class="d-flex gap-2 mt-4">
-                    <button type="submit" class="btn btn-farm">💾 Lưu vùng trồng</button>
-                    <a asp-action="Index" class="btn btn-outline-secondary">← Quay lại</a>
-                </div>
-            </form>
-        </div>
-    </div>
-</div>
-
-@section Scripts {
-    @{
-        await Html.RenderPartialAsync("_ValidationScriptsPartial");
+    ViewData["Title"] = "Thêm vùng trồng"; ViewData["LoadMap"] = true;
+    if (!string.IsNullOrWhiteSpace(Model.GpsCoordinates)) {
+        var parts = Model.GpsCoordinates.Split(',');
+        if(parts.Length == 2 && double.TryParse(parts[0], System.Globalization.NumberStyles.Float, System.Globalization.CultureInfo.InvariantCulture, out var lat) && double.TryParse(parts[1], System.Globalization.NumberStyles.Float, System.Globalization.CultureInfo.InvariantCulture, out var lng) && double.IsFinite(lat) && double.IsFinite(lng) && Math.Abs(lat) <= 90 && Math.Abs(lng) <= 180) { ViewData["Latitude"] = lat.ToString(System.Globalization.CultureInfo.InvariantCulture); ViewData["Longitude"] = lng.ToString(System.Globalization.CultureInfo.InvariantCulture); }
     }
 }
+<div class="page-header"><div><p class="eyebrow">CƠ SỞ TRANG TRẠI</p><h1>Thêm vùng trồng</h1><p class="page-description">Lưu thông tin vùng đất và đánh dấu vị trí canh tác trên bản đồ.</p></div><a asp-action="Index" class="btn btn-outline-secondary">← Danh sách vùng trồng</a></div>
+<div class="form-layout"><form asp-action="Create" class="card form-main" data-save-form><div class="px-4 pt-4"><div asp-validation-summary="ModelOnly"></div></div><input type="hidden" asp-for="Id" /><partial name="_Fields" model="Model" /><partial name="_RecordChange"/><div class="form-actions"><a asp-action="Index" class="btn btn-outline-secondary">Hủy</a><button type="submit" class="btn btn-farm"><svg class="icon"><use href="#i-check" /></svg>Lưu vùng trồng</button></div></form><aside class="form-aside"><svg class="icon mb-3"><use href="#i-leaf" /></svg><h3>Bắt đầu từ thông tin cơ bản.</h3><p>Chỉ tên vùng trồng là bắt buộc. Bạn có thể cập nhật diện tích, vị trí và kết quả xét nghiệm khi có thông tin.</p><ul><li>Diện tích sử dụng đơn vị mét vuông (m²).</li><li>Bấm bản đồ hoặc kéo điểm đánh dấu để chọn vị trí.</li><li>Thông tin chưa biết có thể để trống.</li></ul></aside></div>
+@section Scripts { <partial name="_ValidationScriptsPartial" /> }

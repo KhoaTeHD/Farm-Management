@@ -1,0 +1,19 @@
+@model Farm_Management.Models.ViewModels.DeleteConfirmationViewModel
+<section class="card danger-panel">
+    <div class="card-body">
+        <div class="delete-icon"><svg class="icon"><use href="#i-trash" /></svg></div>
+        <p class="eyebrow">KIỂM TRA TRƯỚC KHI XÓA</p><h1>@Model.Title</h1>
+        <p class="page-description mb-4">@Model.Description</p>
+        <dl class="definition-grid my-4">
+            @foreach (var item in Model.Items) { <div><dt>@item.Label</dt><dd>@item.Value</dd></div> }
+        </dl>
+        @if (Model.Notice != null) { <div class="inline-notice">@Model.Notice</div> }
+        @if(ViewData["RecordRevision"]!=null){<p class="form-text mt-3">Hồ sơ được chuyển vào lưu trữ và có thể khôi phục; lịch sử vẫn được giữ.</p>}else{<p class="form-text mt-3">Thao tác xóa không thể hoàn tác trong ứng dụng. Hãy kiểm tra đúng bản ghi.</p>}
+    </div>
+    <form asp-action="Delete" method="post" data-save-form class="form-actions">
+        <input type="hidden" name="Id" value="@Model.Id" />
+        @if(ViewData["RecordRevision"]!=null){<partial name="_RecordChange"/>}
+        <a asp-action="Index" asp-route-date="@Model.Date?.ToString("yyyy-MM-dd")" class="btn btn-outline-secondary">Giữ lại</a>
+        <button type="submit" class="btn btn-danger" disabled="@(!Model.CanDelete)"><svg class="icon"><use href="#i-trash" /></svg>Xác nhận xóa</button>
+    </form>
+</section>

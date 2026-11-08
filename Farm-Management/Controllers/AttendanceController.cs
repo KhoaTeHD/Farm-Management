@@ -1,396 +1,299 @@
-﻿using Farm_Management.Data;
+using Farm_Management.Services;
+using System.Globalization;
+using Farm_Management.Data;
 using Farm_Management.Models;
 using Farm_Management.Models.ViewModels;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
-using System;
-using System.Linq;
-using System.Threading.Tasks;
 
-namespace Farm_Management.Controllers
+namespace Farm_Management.Controllers;
+
+public class AttendanceController(ApplicationDbContext context) : Controller
 {
-    public class AttendanceController : Controller
+    public async Task<IActionResult> Index(DateTime? date, bool missingDate = false)
     {
-        private readonly ApplicationDbContext _context;
+        var selectedDate = (date ?? DateTime.Today).Date;
+        if (selectedDate.Year < 2 || selectedDate.Year > 9998) return BadRequest("Ngày không hợp lệ");
+        ViewBag.MissingDate = missingDate;
+        ViewBag.SelectedDate = selectedDate;
+        var nextDate = selectedDate == DateTime.MaxValue.Date ? selectedDate : selectedDate.AddDays(1);
+        var logs = await context.AttendanceLogs
+            .Where(a => missingDate ? a.Date == null : a.Date >= selectedDate && a.Date < nextDate).ToListAsync();
+        await LoadWorkersAsync(logs);
+        var validLogs = logs.Where(l => l.Worker != null && l.WorkerId.HasValue && l.Date.HasValue)
+            .GroupBy(l => (l.WorkerId, l.Date!.Value.Date))
+            .Where(g => g.Count() == 1).Select(g => g.Single())
+            .Where(l => AttendanceRules.IsValidHours(l.HoursWorked)).ToList();
+        ViewBag.ValidLogs = validLogs;
+        ViewBag.DataWarning = validLogs.Count != logs.Count
+            ? "Có bản ghi thiếu/sai dữ liệu hoặc trùng công nhân trong ngày. Tổng bên dưới chỉ tính bản ghi hợp lệ, không trùng. Hãy sửa hoặc xóa các bản ghi cần điều chỉnh."
+            : null;
+        var workerIds = logs.Where(l => l.WorkerId.HasValue).Select(l => l.WorkerId!.Value).ToList();
+        ViewBag.AvailableWorkers = missingDate ? new List<Worker>() : await context.Workers
+            .Where(w => w.IsActive == true && !workerIds.Contains(w.Id))
+            .OrderBy(w => w.Code).ToListAsync();
+        ViewBag.PayrollLocked = await PayrollService.IsLockedAsync(context, selectedDate);
+        if (ViewBag.PayrollLocked == true) ViewBag.AvailableWorkers = new List<Worker>();
+        return View(logs.OrderBy(l => l.Worker?.Code).ThenBy(l => l.Id).ToList());
+    }
 
-        public AttendanceController(ApplicationDbContext context)
+    public async Task<IActionResult> Calendar(int? year, int? month)
+    {
+        var selectedYear = year ?? DateTime.Today.Year;
+        var selectedMonth = month ?? DateTime.Today.Month;
+        if (selectedYear < 2 || selectedYear > 9998 || selectedMonth < 1 || selectedMonth > 12)
+            return BadRequest("Tháng hoặc năm không hợp lệ");
+        var start = new DateTime(selectedYear, selectedMonth, 1);
+        ViewBag.PayrollLocked = await PayrollService.IsLockedAsync(context, start);
+        var end = start.AddMonths(1);
+        var logs = await context.AttendanceLogs.Where(a => a.Date >= start && a.Date < end)
+            .OrderBy(a => a.Id).ToListAsync();
+        // Include former workers with attendance in this month so historical totals remain visible.
+        var ids = logs.Where(l => l.WorkerId.HasValue).Select(l => l.WorkerId!.Value).ToList();
+        var workers = await context.Workers.Where(w => w.IsActive == true || ids.Contains(w.Id))
+            .OrderBy(w => w.Code).ToListAsync();
+        var groups = logs.Where(l => l.WorkerId.HasValue && l.Date.HasValue)
+            .GroupBy(l => (WorkerId: l.WorkerId!.Value, Day: l.Date!.Value.Day)).ToList();
+        var duplicates = groups.Where(g => g.Count() > 1).ToList();
+        // Duplicate cells must be repaired from the list, never silently overwritten.
+        var invalidCount = logs.Count(l => !l.WorkerId.HasValue || !workers.Any(w => w.Id == l.WorkerId)
+            || !AttendanceRules.IsValidHours(l.HoursWorked));
+        ViewBag.DataWarning = duplicates.Count > 0 || invalidCount > 0
+            ? $"Có {duplicates.Count} ô chấm công bị trùng và {invalidCount} bản ghi thiếu hoặc sai dữ liệu. Hãy mở danh sách theo ngày để sửa; tổng chỉ tính bản ghi hợp lệ, không trùng."
+            : null;
+        return View(new AttendanceCalendarViewModel
         {
-            _context = context;
+            Year = selectedYear,
+            Month = selectedMonth,
+            DaysInMonth = DateTime.DaysInMonth(selectedYear, selectedMonth),
+            Workers = workers,
+            Logs = groups.Where(g => g.Count() == 1 && workers.Any(w => w.Id == g.Key.WorkerId))
+                .ToDictionary(g => g.Key, g => g.Single()),
+            DuplicateCells = duplicates.Select(g => g.Key).ToHashSet()
+        });
+    }
+
+    [HttpPost, ValidateAntiForgeryToken]
+    public async Task<IActionResult> SaveCell(int? workerId, string? date, decimal? hours)
+    {
+        if (!ModelState.IsValid || !AttendanceRules.IsValidHours(hours))
+            return Json(new { success = false, message = "Số giờ từ 0 đến 24, theo bước 0.5 giờ" });
+        if (!DateTime.TryParseExact(date, "yyyy-MM-dd", CultureInfo.InvariantCulture,
+                DateTimeStyles.None, out var day) || day.Year < 2 || day.Year > 9998)
+            return Json(new { success = false, message = "Ngày không hợp lệ" });
+        await using var transaction = await context.BeginBusinessWriteAsync();
+        if (await PayrollService.IsLockedAsync(context, day))
+            return Json(new { success = false, message = PayrollService.LockedMessage });
+        var worker = workerId.HasValue ? await context.Workers.FindAsync(workerId.Value) : null;
+        if (worker == null)
+            return Json(new { success = false, message = "Công nhân không tồn tại" });
+        var logs = await context.AttendanceLogs.Where(a => a.WorkerId == workerId
+            && a.Date >= day && a.Date < day.AddDays(1)).ToListAsync();
+        if (logs.Count > 1)
+            return Json(new { success = false, message = "Ngày này có nhiều bản ghi. Hãy sửa trong danh sách chấm công." });
+        var log = logs.SingleOrDefault();
+        if (worker.IsActive != true && log == null)
+            return Json(new { success = false, message = "Không thể tạo chấm công mới cho công nhân đã nghỉ hoặc chưa có trạng thái" });
+        if (hours == 0)
+        {
+            if (log != null) context.AttendanceLogs.Remove(log);
         }
-
-        // GET: Attendance
-        // Hiển thị chấm công theo ngày (mặc định: hôm nay)
-        public async Task<IActionResult> Index(DateTime? date)
+        else
         {
-            var selectedDate = date ?? DateTime.Today;
-            ViewBag.SelectedDate = selectedDate;
-
-            var logs = await _context.AttendanceLogs
-                .Include(a => a.Worker)
-                .Where(a => a.Date == selectedDate)
-                .OrderBy(a => a.Worker.Code)
-                .ToListAsync();
-
-            // Lấy danh sách workers active (chưa chấm công hôm nay)
-            var workerIdsWithLogs = logs.Select(l => l.WorkerId).ToList();
-            var availableWorkers = await _context.Workers
-                .Where(w => w.IsActive && !workerIdsWithLogs.Contains(w.Id))
-                .OrderBy(w => w.Code)
-                .ToListAsync();
-
-            ViewBag.AvailableWorkers = availableWorkers;
-
-            return View(logs);
+            if (log == null)
+            {
+                log = new AttendanceLog { WorkerId = workerId, Date = day };
+                context.AttendanceLogs.Add(log);
+            }
+            log.Date = day;
+            log.HoursWorked = hours;
+            log.WorkType = AttendanceRules.Classify(hours);
         }
+        await context.SaveChangesAsync();
+        await transaction.CommitAsync();
+        return Json(new { success = true, workType = hours == 0 ? "" : AttendanceRules.Classify(hours) });
+    }
 
-        // GET: Attendance/Calendar
-        // Hiển thị lịch chấm công theo tháng
-        public async Task<IActionResult> Calendar(int? year, int? month)
+    [HttpPost, ValidateAntiForgeryToken]
+    public async Task<IActionResult> MarkAttendance(DateTime? date, int[] workerIds, decimal[] hours, string[]? notes)
+    {
+        if (!ModelState.IsValid || !date.HasValue || date.Value.Year < 2 || date.Value.Year > 9998
+            || workerIds == null || workerIds.Length == 0 || hours == null
+            || hours.Length != workerIds.Length || (notes != null && notes.Length != workerIds.Length))
         {
-            var selectedYear = year ?? DateTime.Today.Year;
-            var selectedMonth = month ?? DateTime.Today.Month;
-
-            var firstDay = new DateTime(selectedYear, selectedMonth, 1);
-            var daysInMonth = DateTime.DaysInMonth(selectedYear, selectedMonth);
-
-            // Lấy tất cả workers đang active
-            var workers = await _context.Workers
-                .Where(w => w.IsActive)
-                .OrderBy(w => w.Code)
-                .ToListAsync();
-
-            // Lấy tất cả attendance logs trong tháng này
-            var logs = await _context.AttendanceLogs
-                .Where(a => a.Date.Year == selectedYear && a.Date.Month == selectedMonth)
-                .ToListAsync();
-
-            // Convert logs thành Dictionary để tra cứu nhanh
-            var logsDictionary = new Dictionary<(int WorkerId, int Day), AttendanceLog>();
-            foreach (var log in logs)
-            {
-                logsDictionary[(log.WorkerId, log.Date.Day)] = log;
-            }
-
-            var viewModel = new AttendanceCalendarViewModel
-            {
-                Year = selectedYear,
-                Month = selectedMonth,
-                DaysInMonth = daysInMonth,
-                Workers = workers,
-                Logs = logsDictionary
-            };
-
-            return View(viewModel);
-        }
-
-        // POST: Attendance/SaveCell
-        // AJAX endpoint để lưu từng ô
-        [HttpPost]
-        public async Task<IActionResult> SaveCell(int workerId, string date, decimal hours)
-        {
-            try
-            {
-                // Parse date
-                if (!DateTime.TryParse(date, out var parsedDate))
-                {
-                    return Json(new { success = false, message = "Ngày không hợp lệ" });
-                }
-
-                // Validate hours
-                if (hours < 0 || hours > 24)
-                {
-                    return Json(new { success = false, message = "Số giờ phải từ 0-24" });
-                }
-
-                // Tìm log hiện tại
-                var log = await _context.AttendanceLogs
-                    .FirstOrDefaultAsync(a => a.WorkerId == workerId && a.Date == parsedDate);
-
-                if (hours == 0)
-                {
-                    // Nếu hours = 0 → Xóa log nếu tồn tại
-                    if (log != null)
-                    {
-                        _context.AttendanceLogs.Remove(log);
-                        await _context.SaveChangesAsync();
-                    }
-
-                    return Json(new
-                    {
-                        success = true,
-                        workType = "",
-                        message = "Đã xóa chấm công"
-                    });
-                }
-                else
-                {
-                    // Classify work type
-                    var workType = ClassifyWorkType(hours);
-
-                    if (log == null)
-                    {
-                        // Tạo mới
-                        log = new AttendanceLog
-                        {
-                            WorkerId = workerId,
-                            Date = parsedDate,
-                            HoursWorked = hours,
-                            WorkType = workType
-                        };
-                        _context.AttendanceLogs.Add(log);
-                    }
-                    else
-                    {
-                        // Cập nhật
-                        log.HoursWorked = hours;
-                        log.WorkType = workType;
-                    }
-
-                    await _context.SaveChangesAsync();
-
-                    return Json(new
-                    {
-                        success = true,
-                        workType = workType,
-                        message = "Lưu thành công"
-                    });
-                }
-            }
-            catch (Exception ex)
-            {
-                return Json(new
-                {
-                    success = false,
-                    message = $"Lỗi: {ex.Message}"
-                });
-            }
-        }
-
-        // POST: Attendance/MarkAttendance
-        // Quick mark attendance cho nhiều workers
-        [HttpPost]
-        [ValidateAntiForgeryToken]
-        public async Task<IActionResult> MarkAttendance(DateTime date, int[] workerIds, decimal[] hours, string[] notes)
-        {
-            if (workerIds == null || workerIds.Length == 0)
-            {
-                TempData["Error"] = "Chưa chọn công nhân nào";
-                return RedirectToAction(nameof(Index), new { date });
-            }
-
-            var successCount = 0;
-            var errors = new List<string>();
-
-            for (int i = 0; i < workerIds.Length; i++)
-            {
-                var workerId = workerIds[i];
-                var hoursWorked = hours[i];
-                var note = notes?[i];
-
-                // Validate
-                if (hoursWorked < 0 || hoursWorked > 24)
-                {
-                    errors.Add($"Công nhân ID {workerId}: Số giờ không hợp lệ");
-                    continue;
-                }
-
-                // Check duplicate
-                var exists = await _context.AttendanceLogs
-                    .AnyAsync(a => a.WorkerId == workerId && a.Date == date);
-
-                if (exists)
-                {
-                    errors.Add($"Công nhân ID {workerId}: Đã chấm công ngày này");
-                    continue;
-                }
-
-                // Classify work type
-                var workType = ClassifyWorkType(hoursWorked);
-
-                var log = new AttendanceLog
-                {
-                    WorkerId = workerId,
-                    Date = date,
-                    HoursWorked = hoursWorked,
-                    WorkType = workType,
-                    Notes = note
-                };
-
-                _context.AttendanceLogs.Add(log);
-                successCount++;
-            }
-
-            await _context.SaveChangesAsync();
-
-            if (successCount > 0)
-            {
-                TempData["Success"] = $"Đã chấm công {successCount} công nhân";
-            }
-            if (errors.Any())
-            {
-                TempData["Error"] = string.Join("<br>", errors);
-            }
-
+            TempData["Error"] = "Dữ liệu chấm công chưa đầy đủ hoặc không hợp lệ";
             return RedirectToAction(nameof(Index), new { date });
         }
-
-        // GET: Attendance/Create
-        public async Task<IActionResult> Create(DateTime? date)
+        var day = date.Value.Date;
+        await using var transaction = await context.BeginBusinessWriteAsync();
+        if (await PayrollService.IsLockedAsync(context, day))
         {
-            var selectedDate = date ?? DateTime.Today;
-            ViewBag.SelectedDate = selectedDate;
-
-            // Lấy workers chưa chấm công ngày này
-            var workerIdsWithLogs = await _context.AttendanceLogs
-                .Where(a => a.Date == selectedDate)
-                .Select(a => a.WorkerId)
-                .ToListAsync();
-
-            ViewData["WorkerId"] = new SelectList(
-                await _context.Workers
-                    .Where(w => w.IsActive && !workerIdsWithLogs.Contains(w.Id))
-                    .OrderBy(w => w.Code)
-                    .ToListAsync(),
-                "Id", "FullName");
-
-            return View();
+            TempData["Error"] = PayrollService.LockedMessage;
+            return RedirectToAction(nameof(Index), new { date });
         }
-
-        // POST: Attendance/Create
-        [HttpPost]
-        [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Create([Bind("WorkerId,Date,HoursWorked,Notes")] AttendanceLog attendanceLog)
+        var workers = await context.Workers.Where(w => workerIds.Contains(w.Id) && w.IsActive == true)
+            .Select(w => w.Id).ToListAsync();
+        var recordedIds = await context.AttendanceLogs.Where(a => a.Date >= day && a.Date < day.AddDays(1))
+            .Select(a => a.WorkerId).ToListAsync();
+        var seen = new HashSet<int>();
+        var errors = new List<string>();
+        var count = 0;
+        for (var i = 0; i < workerIds.Length; i++)
         {
-            if (ModelState.IsValid)
+            var id = workerIds[i];
+            var note = notes?[i];
+            if (!seen.Add(id) || !workers.Contains(id) || recordedIds.Contains(id)
+                || !AttendanceRules.IsValidHours(hours[i]) || note?.Length > 500)
             {
-                // Check duplicate
-                var exists = await _context.AttendanceLogs
-                    .AnyAsync(a => a.WorkerId == attendanceLog.WorkerId && a.Date == attendanceLog.Date);
-
-                if (exists)
-                {
-                    ModelState.AddModelError("", "Công nhân đã được chấm công vào ngày này");
-                    await LoadWorkersDropdown(attendanceLog.Date);
-                    return View(attendanceLog);
-                }
-
-                // Auto-classify
-                attendanceLog.WorkType = ClassifyWorkType(attendanceLog.HoursWorked);
-
-                _context.Add(attendanceLog);
-                await _context.SaveChangesAsync();
-                TempData["Success"] = "Chấm công thành công!";
-                return RedirectToAction(nameof(Index), new { date = attendanceLog.Date });
+                errors.Add($"Công nhân ID {id}: Trùng chấm công, không đang làm việc hoặc dữ liệu không hợp lệ");
+                continue;
             }
-
-            await LoadWorkersDropdown(attendanceLog.Date);
-            return View(attendanceLog);
-        }
-
-        // GET: Attendance/Edit/5
-        public async Task<IActionResult> Edit(int? id)
-        {
-            if (id == null) return NotFound();
-
-            var log = await _context.AttendanceLogs
-                .Include(a => a.Worker)
-                .FirstOrDefaultAsync(a => a.Id == id);
-
-            if (log == null) return NotFound();
-
-            return View(log);
-        }
-
-        // POST: Attendance/Edit/5
-        [HttpPost]
-        [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Edit(int id, [Bind("Id,WorkerId,Date,HoursWorked,Notes,CreatedAt")] AttendanceLog attendanceLog)
-        {
-            if (id != attendanceLog.Id) return NotFound();
-
-            if (ModelState.IsValid)
+            context.AttendanceLogs.Add(new AttendanceLog
             {
-                try
-                {
-                    // Auto-classify
-                    attendanceLog.WorkType = ClassifyWorkType(attendanceLog.HoursWorked);
-
-                    _context.Update(attendanceLog);
-                    await _context.SaveChangesAsync();
-                    TempData["Success"] = "Cập nhật chấm công thành công!";
-                }
-                catch (DbUpdateConcurrencyException)
-                {
-                    if (!AttendanceLogExists(attendanceLog.Id))
-                        return NotFound();
-                    throw;
-                }
-                return RedirectToAction(nameof(Index), new { date = attendanceLog.Date });
-            }
-            return View(attendanceLog);
+                WorkerId = id, Date = day, HoursWorked = hours[i],
+                WorkType = AttendanceRules.Classify(hours[i]), Notes = note
+            });
+            count++;
         }
+        await context.SaveChangesAsync();
+        await transaction.CommitAsync();
+        if (count > 0) TempData["Success"] = $"Đã chấm công {count} công nhân";
+        if (errors.Count > 0) TempData["Error"] = string.Join("; ", errors);
+        return RedirectToAction(nameof(Index), new { date = day });
+    }
 
-        // GET: Attendance/Delete/5
-        public async Task<IActionResult> Delete(int? id)
+    public async Task<IActionResult> Create(DateTime? date)
+    {
+        var form = new AttendanceLogForm { Date = (date ?? DateTime.Today).Date, HoursWorked = 8 };
+        await LoadFormAsync(form);
+        return View(form);
+    }
+
+    [HttpPost, ValidateAntiForgeryToken]
+    public async Task<IActionResult> Create([Bind("WorkerId,Date,HoursWorked,Notes")] AttendanceLogForm form)
+    {
+        await using var transaction = await context.BeginBusinessWriteAsync();
+        await ValidateAttendanceAsync(form, null);
+        if (!ModelState.IsValid)
         {
-            if (id == null) return NotFound();
-
-            var log = await _context.AttendanceLogs
-                .Include(a => a.Worker)
-                .FirstOrDefaultAsync(a => a.Id == id);
-
-            if (log == null) return NotFound();
-
-            return View(log);
+            await LoadFormAsync(form);
+            return View(form);
         }
+        var log = form.ToEntity();
+        log.Date = form.Date!.Value.Date;
+        log.WorkType = AttendanceRules.Classify(log.HoursWorked);
+        context.AttendanceLogs.Add(log);
+        await context.SaveChangesAsync();
+        await transaction.CommitAsync();
+        TempData["Success"] = "Chấm công thành công!";
+        return RedirectToAction(nameof(Index), new { date = log.Date });
+    }
 
-        // POST: Attendance/Delete/5
-        [HttpPost, ActionName("Delete")]
-        [ValidateAntiForgeryToken]
-        public async Task<IActionResult> DeleteConfirmed(int id)
+    public async Task<IActionResult> Edit(int? id)
+    {
+        var log = id.HasValue ? await context.AttendanceLogs.FindAsync(id.Value) : null;
+        if (log == null) return NotFound();
+        var form = AttendanceLogForm.FromEntity(log);
+        await LoadFormAsync(form);
+        return View(form);
+    }
+
+    [HttpPost, ValidateAntiForgeryToken]
+    public async Task<IActionResult> Edit(int id, [Bind("Id,WorkerId,Date,HoursWorked,Notes")] AttendanceLogForm form)
+    {
+        if (id != form.Id) return NotFound();
+        await using var transaction = await context.BeginBusinessWriteAsync();
+        var existing = await context.AttendanceLogs.FindAsync(id);
+        if (existing == null) return NotFound();
+        await ValidateAttendanceAsync(form, existing);
+        if (!ModelState.IsValid)
         {
-            var log = await _context.AttendanceLogs.FindAsync(id);
-            if (log != null)
-            {
-                var date = log.Date;
-                _context.AttendanceLogs.Remove(log);
-                await _context.SaveChangesAsync();
-                TempData["Success"] = "Xóa chấm công thành công!";
-                return RedirectToAction(nameof(Index), new { date });
-            }
-            return RedirectToAction(nameof(Index));
+            await LoadFormAsync(form);
+            return View(form);
         }
+        existing.WorkerId = form.WorkerId;
+        existing.Date = form.Date!.Value.Date;
+        existing.HoursWorked = form.HoursWorked;
+        existing.WorkType = AttendanceRules.Classify(form.HoursWorked);
+        existing.Notes = form.Notes;
+        await context.SaveChangesAsync();
+        await transaction.CommitAsync();
+        TempData["Success"] = "Cập nhật chấm công thành công!";
+        return RedirectToAction(nameof(Index), new { date = existing.Date });
+    }
 
-        // Helper: Classify work type based on hours
-        private string ClassifyWorkType(decimal hours)
+    public async Task<IActionResult> Delete(int? id)
+    {
+        var log = id.HasValue ? await context.AttendanceLogs.FindAsync(id.Value) : null;
+        if (log == null) return NotFound();
+        await LoadWorkersAsync(new[] { log });
+        ViewBag.PayrollLocked = log.Date.HasValue && await PayrollService.IsLockedAsync(context, log.Date.Value);
+        return View(log);
+    }
+
+    public async Task<IActionResult> Details(int? id)
+    {
+        var log = id.HasValue ? await context.AttendanceLogs.FindAsync(id.Value) : null;
+        if (log == null) return NotFound();
+        await LoadWorkersAsync(new[] { log });
+        return View(log);
+    }
+
+    [HttpPost, ActionName("Delete"), ValidateAntiForgeryToken]
+    public async Task<IActionResult> DeleteConfirmed(int id)
+    {
+        await using var transaction = await context.BeginBusinessWriteAsync();
+        var log = await context.AttendanceLogs.FindAsync(id);
+        if (log == null) return NotFound();
+        var date = log.Date;
+        if (date.HasValue && await PayrollService.IsLockedAsync(context, date.Value))
         {
-            if (hours >= 8)
-                return "FullDay"; // 1 công
-            else if (hours == 4)
-                return "HalfDay"; // 0.5 công
-            else
-                return "OddHours"; // Giờ lẻ
+            TempData["Error"] = PayrollService.LockedMessage;
+            return RedirectToAction(nameof(Index), new { date });
         }
+        context.AttendanceLogs.Remove(log);
+        await context.SaveChangesAsync();
+        await transaction.CommitAsync();
+        TempData["Success"] = "Xóa chấm công thành công!";
+        return RedirectToAction(nameof(Index), new { date });
+    }
 
-        private bool AttendanceLogExists(int id)
+    private async Task LoadWorkersAsync(IEnumerable<AttendanceLog> logs)
+    {
+        var ids = logs.Where(l => l.WorkerId.HasValue).Select(l => l.WorkerId!.Value).Distinct().ToList();
+        var workers = await context.Workers.Where(w => ids.Contains(w.Id)).ToDictionaryAsync(w => w.Id);
+        foreach (var log in logs)
+            log.Worker = log.WorkerId.HasValue && workers.TryGetValue(log.WorkerId.Value, out var worker) ? worker : null;
+    }
+
+    private async Task ValidateAttendanceAsync(AttendanceLogForm form, AttendanceLog? existing)
+    {
+        if ((form.Date.HasValue && await PayrollService.IsLockedAsync(context, form.Date.Value))
+            || (existing?.Date.HasValue == true && await PayrollService.IsLockedAsync(context, existing.Date.Value)))
+            ModelState.AddModelError("", PayrollService.LockedMessage);
+        if (!form.Date.HasValue || form.Date.Value.Year < 2 || form.Date.Value.Year > 9998)
+            ModelState.AddModelError("Date", "Ngày chấm công không hợp lệ");
+        var worker = form.WorkerId.HasValue ? await context.Workers.FindAsync(form.WorkerId.Value) : null;
+        if (worker == null || (worker.IsActive != true && existing?.WorkerId != worker.Id))
+            ModelState.AddModelError("WorkerId", "Công nhân không tồn tại hoặc không đang làm việc");
+        if (form.Date.HasValue && form.Date.Value.Year >= 2 && form.Date.Value.Year <= 9998)
         {
-            return _context.AttendanceLogs.Any(e => e.Id == id);
+            var day = form.Date.Value.Date;
+            if (await context.AttendanceLogs.AnyAsync(a => a.Id != form.Id && a.WorkerId == form.WorkerId
+                && a.Date >= day && a.Date < day.AddDays(1)))
+                ModelState.AddModelError("", "Công nhân đã được chấm công vào ngày này");
         }
+    }
 
-        private async Task LoadWorkersDropdown(DateTime date)
-        {
-            var workerIdsWithLogs = await _context.AttendanceLogs
-                .Where(a => a.Date == date)
-                .Select(a => a.WorkerId)
-                .ToListAsync();
-
-            ViewData["WorkerId"] = new SelectList(
-                await _context.Workers
-                    .Where(w => w.IsActive && !workerIdsWithLogs.Contains(w.Id))
-                    .OrderBy(w => w.Code)
-                    .ToListAsync(),
-                "Id", "FullName");
-        }
+    private async Task LoadFormAsync(AttendanceLogForm form)
+    {
+        ViewBag.SelectedDate = form.Date;
+        ViewBag.PayrollLocked = form.Date.HasValue && await PayrollService.IsLockedAsync(context, form.Date.Value);
+        form.Worker = form.WorkerId.HasValue ? await context.Workers.FindAsync(form.WorkerId.Value) : null;
+        var workers = await context.Workers.Where(w => w.IsActive == true || w.Id == form.WorkerId)
+            .OrderBy(w => w.Code).ToListAsync();
+        ViewBag.WorkerSalaries = workers.ToDictionary(w => w.Id.ToString(), w => w.DailySalary);
+        ViewBag.WorkerId = new SelectList(workers.Select(w => new { w.Id, Label = (w.Code ?? "Chưa có mã") + " · " + (w.FullName ?? "Chưa có tên") }), "Id", "Label", form.WorkerId);
     }
 }

@@ -33,20 +33,28 @@ namespace Farm_Management.Migrations
                     b.Property<decimal?>("Acreage")
                         .HasColumnType("decimal(18,2)");
 
-                    b.Property<DateTime>("CreatedAt")
+                    b.Property<DateTime?>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<DateTime?>("DeletedAt")
                         .HasColumnType("datetime2");
 
                     b.Property<string>("GpsCoordinates")
                         .HasMaxLength(200)
                         .HasColumnType("nvarchar(200)");
 
+                    b.Property<bool?>("IsDeleted")
+                        .HasColumnType("bit");
+
                     b.Property<string>("Name")
-                        .IsRequired()
                         .HasMaxLength(100)
                         .HasColumnType("nvarchar(100)");
 
                     b.Property<string>("Notes")
                         .HasColumnType("nvarchar(max)");
+
+                    b.Property<int?>("Revision")
+                        .HasColumnType("int");
 
                     b.Property<DateTime?>("SoilTestDate")
                         .HasColumnType("datetime2");
@@ -71,13 +79,13 @@ namespace Farm_Management.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
-                    b.Property<DateTime>("CreatedAt")
+                    b.Property<DateTime?>("CreatedAt")
                         .HasColumnType("datetime2");
 
-                    b.Property<DateTime>("Date")
+                    b.Property<DateTime?>("Date")
                         .HasColumnType("datetime2");
 
-                    b.Property<decimal>("HoursWorked")
+                    b.Property<decimal?>("HoursWorked")
                         .HasColumnType("decimal(4,2)");
 
                     b.Property<string>("Notes")
@@ -85,19 +93,230 @@ namespace Farm_Management.Migrations
                         .HasColumnType("nvarchar(500)");
 
                     b.Property<string>("WorkType")
-                        .IsRequired()
                         .HasMaxLength(20)
                         .HasColumnType("nvarchar(20)");
 
-                    b.Property<int>("WorkerId")
+                    b.Property<int?>("WorkerId")
                         .HasColumnType("int");
 
                     b.HasKey("Id");
 
-                    b.HasIndex("WorkerId", "Date")
-                        .IsUnique();
+                    b.HasIndex("WorkerId", "Date");
 
                     b.ToTable("AttendanceLogs");
+                });
+
+            modelBuilder.Entity("Farm_Management.Models.CropCareStep", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<DateTime?>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<DateTime?>("DeletedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("Instructions")
+                        .HasMaxLength(2000)
+                        .HasColumnType("nvarchar(2000)");
+
+                    b.Property<bool?>("IsDeleted")
+                        .HasColumnType("bit");
+
+                    b.Property<string>("Kind")
+                        .HasMaxLength(30)
+                        .HasColumnType("nvarchar(30)");
+
+                    b.Property<int?>("PlannedDay")
+                        .HasColumnType("int");
+
+                    b.Property<int?>("PlantId")
+                        .HasColumnType("int");
+
+                    b.Property<int?>("Revision")
+                        .HasColumnType("int");
+
+                    b.Property<string>("Title")
+                        .HasMaxLength(150)
+                        .HasColumnType("nvarchar(150)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("PlantId", "PlannedDay");
+
+                    b.ToTable("CropCareSteps");
+                });
+
+            modelBuilder.Entity("Farm_Management.Models.CropJournalEntry", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<decimal?>("AffectedPercent")
+                        .HasPrecision(5, 2)
+                        .HasColumnType("decimal(5,2)");
+
+                    b.Property<decimal?>("Amount")
+                        .HasPrecision(18, 2)
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<int?>("CareStepId")
+                        .HasColumnType("int");
+
+                    b.Property<string>("Condition")
+                        .HasMaxLength(20)
+                        .HasColumnType("nvarchar(20)");
+
+                    b.Property<DateTime?>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<DateTime?>("Date")
+                        .HasColumnType("datetime2");
+
+                    b.Property<DateTime?>("DeletedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("GrowthStage")
+                        .HasMaxLength(30)
+                        .HasColumnType("nvarchar(30)");
+
+                    b.Property<decimal?>("HeightCm")
+                        .HasPrecision(10, 2)
+                        .HasColumnType("decimal(10,2)");
+
+                    b.Property<int?>("InputLotId")
+                        .HasColumnType("int");
+
+                    b.Property<bool?>("IsDeleted")
+                        .HasColumnType("bit");
+
+                    b.Property<string>("Kind")
+                        .HasMaxLength(30)
+                        .HasColumnType("nvarchar(30)");
+
+                    b.Property<string>("Material")
+                        .HasMaxLength(200)
+                        .HasColumnType("nvarchar(200)");
+
+                    b.Property<string>("Method")
+                        .HasMaxLength(200)
+                        .HasColumnType("nvarchar(200)");
+
+                    b.Property<string>("PhotoPath")
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.Property<int?>("PlantId")
+                        .HasColumnType("int");
+
+                    b.Property<string>("Quality")
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
+
+                    b.Property<string>("RecordCode")
+                        .HasMaxLength(40)
+                        .HasColumnType("nvarchar(40)");
+
+                    b.Property<string>("Recorder")
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.Property<int?>("Revision")
+                        .HasColumnType("int");
+
+                    b.Property<string>("Summary")
+                        .HasMaxLength(2000)
+                        .HasColumnType("nvarchar(2000)");
+
+                    b.Property<decimal?>("SurvivalPercent")
+                        .HasPrecision(5, 2)
+                        .HasColumnType("decimal(5,2)");
+
+                    b.Property<string>("Unit")
+                        .HasMaxLength(10)
+                        .HasColumnType("nvarchar(10)");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<int?>("WaterResourceId")
+                        .HasColumnType("int");
+
+                    b.Property<string>("Weather")
+                        .HasMaxLength(200)
+                        .HasColumnType("nvarchar(200)");
+
+                    b.Property<int?>("WithdrawalDays")
+                        .HasColumnType("int");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("CareStepId");
+
+                    b.HasIndex("InputLotId");
+
+                    b.HasIndex("RecordCode");
+
+                    b.HasIndex("WaterResourceId");
+
+                    b.HasIndex("PlantId", "Date");
+
+                    b.ToTable("CropJournalEntries");
+                });
+
+            modelBuilder.Entity("Farm_Management.Models.CultivationAudit", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("Action")
+                        .HasMaxLength(20)
+                        .HasColumnType("nvarchar(20)");
+
+                    b.Property<string>("Actor")
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.Property<string>("AfterJson")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("BeforeJson")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTime?>("OccurredAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<int?>("PlantId")
+                        .HasColumnType("int");
+
+                    b.Property<string>("Reason")
+                        .HasMaxLength(1000)
+                        .HasColumnType("nvarchar(1000)");
+
+                    b.Property<int?>("RecordId")
+                        .HasColumnType("int");
+
+                    b.Property<string>("RecordType")
+                        .HasMaxLength(60)
+                        .HasColumnType("nvarchar(60)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("PlantId", "OccurredAt");
+
+                    b.HasIndex("RecordType", "RecordId");
+
+                    b.ToTable("CultivationAudits");
                 });
 
             modelBuilder.Entity("Farm_Management.Models.FertilizationLog", b =>
@@ -108,18 +327,17 @@ namespace Farm_Management.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
-                    b.Property<DateTime>("ApplicationDate")
+                    b.Property<DateTime?>("ApplicationDate")
                         .HasColumnType("datetime2");
 
-                    b.Property<DateTime>("CreatedAt")
+                    b.Property<DateTime?>("CreatedAt")
                         .HasColumnType("datetime2");
 
                     b.Property<string>("Dosage")
-                        .IsRequired()
                         .HasMaxLength(100)
                         .HasColumnType("nvarchar(100)");
 
-                    b.Property<int>("FertilizerId")
+                    b.Property<int?>("FertilizerId")
                         .HasColumnType("int");
 
                     b.Property<string>("Method")
@@ -129,10 +347,10 @@ namespace Farm_Management.Migrations
                     b.Property<string>("Notes")
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<int>("PlantId")
+                    b.Property<int?>("PlantId")
                         .HasColumnType("int");
 
-                    b.Property<int>("WorkerId")
+                    b.Property<int?>("WorkerId")
                         .HasColumnType("int");
 
                     b.HasKey("Id");
@@ -154,7 +372,7 @@ namespace Farm_Management.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
-                    b.Property<DateTime>("CreatedAt")
+                    b.Property<DateTime?>("CreatedAt")
                         .HasColumnType("datetime2");
 
                     b.Property<DateTime?>("ExpiryDate")
@@ -169,15 +387,13 @@ namespace Farm_Management.Migrations
                         .HasColumnType("nvarchar(50)");
 
                     b.Property<string>("Name")
-                        .IsRequired()
                         .HasMaxLength(200)
                         .HasColumnType("nvarchar(200)");
 
-                    b.Property<decimal>("StockQuantity")
+                    b.Property<decimal?>("StockQuantity")
                         .HasColumnType("decimal(18,2)");
 
                     b.Property<string>("Supplier")
-                        .IsRequired()
                         .HasMaxLength(200)
                         .HasColumnType("nvarchar(200)");
 
@@ -194,6 +410,57 @@ namespace Farm_Management.Migrations
                     b.ToTable("Fertilizers");
                 });
 
+            modelBuilder.Entity("Farm_Management.Models.FieldResource", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<int?>("AreaId")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime?>("DeletedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<bool?>("IsDeleted")
+                        .HasColumnType("bit");
+
+                    b.Property<string>("Kind")
+                        .HasMaxLength(20)
+                        .HasColumnType("nvarchar(20)");
+
+                    b.Property<string>("Location")
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
+
+                    b.Property<string>("Name")
+                        .HasMaxLength(200)
+                        .HasColumnType("nvarchar(200)");
+
+                    b.Property<int?>("Revision")
+                        .HasColumnType("int");
+
+                    b.Property<string>("RiskAssessment")
+                        .HasMaxLength(2000)
+                        .HasColumnType("nvarchar(2000)");
+
+                    b.Property<string>("Status")
+                        .HasMaxLength(20)
+                        .HasColumnType("nvarchar(20)");
+
+                    b.Property<string>("Treatment")
+                        .HasMaxLength(2000)
+                        .HasColumnType("nvarchar(2000)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("AreaId");
+
+                    b.ToTable("FieldResources");
+                });
+
             modelBuilder.Entity("Farm_Management.Models.HarvestBatch", b =>
                 {
                     b.Property<int>("Id")
@@ -202,19 +469,19 @@ namespace Farm_Management.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
-                    b.Property<DateTime>("CreatedAt")
+                    b.Property<DateTime?>("CreatedAt")
                         .HasColumnType("datetime2");
 
-                    b.Property<DateTime>("HarvestDate")
+                    b.Property<DateTime?>("HarvestDate")
                         .HasColumnType("datetime2");
 
                     b.Property<string>("Notes")
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<bool>("PHI_Compliant")
+                    b.Property<bool?>("PHI_Compliant")
                         .HasColumnType("bit");
 
-                    b.Property<int>("PlantId")
+                    b.Property<int?>("PlantId")
                         .HasColumnType("int");
 
                     b.Property<string>("QualityGrade")
@@ -222,11 +489,10 @@ namespace Farm_Management.Migrations
                         .HasColumnType("nvarchar(50)");
 
                     b.Property<string>("TraceabilityCode")
-                        .IsRequired()
                         .HasMaxLength(50)
                         .HasColumnType("nvarchar(50)");
 
-                    b.Property<int>("WorkerId")
+                    b.Property<int?>("WorkerId")
                         .HasColumnType("int");
 
                     b.Property<decimal?>("YieldKg")
@@ -236,12 +502,339 @@ namespace Farm_Management.Migrations
 
                     b.HasIndex("PlantId");
 
-                    b.HasIndex("TraceabilityCode")
-                        .IsUnique();
+                    b.HasIndex("TraceabilityCode");
 
                     b.HasIndex("WorkerId");
 
                     b.ToTable("HarvestBatches");
+                });
+
+            modelBuilder.Entity("Farm_Management.Models.HarvestTrace", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("Code")
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
+
+                    b.Property<DateTime?>("DeletedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<DateTime?>("HarvestDate")
+                        .HasColumnType("datetime2");
+
+                    b.Property<bool?>("IsDeleted")
+                        .HasColumnType("bit");
+
+                    b.Property<bool?>("IsVoided")
+                        .HasColumnType("bit");
+
+                    b.Property<int?>("JournalEntryId")
+                        .HasColumnType("int");
+
+                    b.Property<int?>("LegacyHarvestId")
+                        .HasColumnType("int");
+
+                    b.Property<int?>("PlantId")
+                        .HasColumnType("int");
+
+                    b.Property<string>("Quality")
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
+
+                    b.Property<int?>("Revision")
+                        .HasColumnType("int");
+
+                    b.Property<string>("SnapshotJson")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("SourceHash")
+                        .HasMaxLength(64)
+                        .HasColumnType("nvarchar(64)");
+
+                    b.Property<decimal?>("WeightKg")
+                        .HasPrecision(18, 2)
+                        .HasColumnType("decimal(18,2)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("Code");
+
+                    b.HasIndex("JournalEntryId");
+
+                    b.HasIndex("LegacyHarvestId");
+
+                    b.ToTable("HarvestTraces");
+                });
+
+            modelBuilder.Entity("Farm_Management.Models.InputLot", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("Code")
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
+
+                    b.Property<DateTime?>("DeletedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<DateTime?>("ExpiryDate")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("InvoiceNumber")
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.Property<bool?>("IsDeleted")
+                        .HasColumnType("bit");
+
+                    b.Property<string>("Kind")
+                        .HasMaxLength(20)
+                        .HasColumnType("nvarchar(20)");
+
+                    b.Property<string>("ManufacturerBatch")
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.Property<string>("Notes")
+                        .HasMaxLength(2000)
+                        .HasColumnType("nvarchar(2000)");
+
+                    b.Property<string>("ProductName")
+                        .HasMaxLength(200)
+                        .HasColumnType("nvarchar(200)");
+
+                    b.Property<decimal?>("Quantity")
+                        .HasPrecision(18, 2)
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<DateTime?>("ReceivedDate")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("RegistrationNumber")
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.Property<int?>("Revision")
+                        .HasColumnType("int");
+
+                    b.Property<string>("Status")
+                        .HasMaxLength(20)
+                        .HasColumnType("nvarchar(20)");
+
+                    b.Property<string>("Supplier")
+                        .HasMaxLength(300)
+                        .HasColumnType("nvarchar(300)");
+
+                    b.Property<string>("Unit")
+                        .HasMaxLength(10)
+                        .HasColumnType("nvarchar(10)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("Code");
+
+                    b.ToTable("InputLots");
+                });
+
+            modelBuilder.Entity("Farm_Management.Models.InspectionReport", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("Conclusion")
+                        .HasMaxLength(20)
+                        .HasColumnType("nvarchar(20)");
+
+                    b.Property<DateTime?>("DeletedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("EvidencePath")
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.Property<string>("Indicator")
+                        .HasMaxLength(200)
+                        .HasColumnType("nvarchar(200)");
+
+                    b.Property<bool?>("IsDeleted")
+                        .HasColumnType("bit");
+
+                    b.Property<string>("Laboratory")
+                        .HasMaxLength(200)
+                        .HasColumnType("nvarchar(200)");
+
+                    b.Property<string>("LimitReference")
+                        .HasMaxLength(1000)
+                        .HasColumnType("nvarchar(1000)");
+
+                    b.Property<DateTime?>("ReportDate")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("ReportNumber")
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.Property<string>("Result")
+                        .HasMaxLength(2000)
+                        .HasColumnType("nvarchar(2000)");
+
+                    b.Property<int?>("Revision")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime?>("SampleDate")
+                        .HasColumnType("datetime2");
+
+                    b.Property<int?>("TargetId")
+                        .HasColumnType("int");
+
+                    b.Property<string>("TargetType")
+                        .HasMaxLength(20)
+                        .HasColumnType("nvarchar(20)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("TargetType", "TargetId");
+
+                    b.ToTable("InspectionReports");
+                });
+
+            modelBuilder.Entity("Farm_Management.Models.PayrollEntry", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<decimal?>("AdvanceAmount")
+                        .HasPrecision(18, 2)
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<string>("AdvancesJson")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<decimal?>("Amount")
+                        .HasPrecision(18, 2)
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<int?>("AttendanceCount")
+                        .HasColumnType("int");
+
+                    b.Property<string>("AttendanceJson")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<decimal?>("DailySalary")
+                        .HasPrecision(18, 2)
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<int?>("FullDays")
+                        .HasColumnType("int");
+
+                    b.Property<int?>("HalfDays")
+                        .HasColumnType("int");
+
+                    b.Property<decimal?>("NetAmount")
+                        .HasPrecision(18, 2)
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<decimal?>("OddHours")
+                        .HasPrecision(8, 2)
+                        .HasColumnType("decimal(8,2)");
+
+                    b.Property<int?>("PayrollRunId")
+                        .HasColumnType("int");
+
+                    b.Property<decimal?>("TotalHours")
+                        .HasPrecision(8, 2)
+                        .HasColumnType("decimal(8,2)");
+
+                    b.Property<string>("WorkerCode")
+                        .HasMaxLength(20)
+                        .HasColumnType("nvarchar(20)");
+
+                    b.Property<int?>("WorkerId")
+                        .HasColumnType("int");
+
+                    b.Property<string>("WorkerName")
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("WorkerId");
+
+                    b.HasIndex("PayrollRunId", "WorkerId");
+
+                    b.ToTable("PayrollEntries");
+                });
+
+            modelBuilder.Entity("Farm_Management.Models.PayrollRun", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("AdvanceHash")
+                        .HasMaxLength(64)
+                        .HasColumnType("nvarchar(64)");
+
+                    b.Property<string>("AttendanceHash")
+                        .HasMaxLength(64)
+                        .HasColumnType("nvarchar(64)");
+
+                    b.Property<int?>("CalculationVersion")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime?>("FinalizedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<int?>("Month")
+                        .HasColumnType("int");
+
+                    b.Property<decimal?>("NetTotal")
+                        .HasPrecision(18, 2)
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<DateTime?>("ReopenedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("Status")
+                        .HasMaxLength(20)
+                        .HasColumnType("nvarchar(20)");
+
+                    b.Property<decimal?>("TotalAdvances")
+                        .HasPrecision(18, 2)
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<decimal?>("TotalAmount")
+                        .HasPrecision(18, 2)
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<int?>("WorkerCount")
+                        .HasColumnType("int");
+
+                    b.Property<int?>("Year")
+                        .HasColumnType("int");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("Year", "Month", "Status");
+
+                    b.ToTable("PayrollRuns");
                 });
 
             modelBuilder.Entity("Farm_Management.Models.Pesticide", b =>
@@ -253,31 +846,29 @@ namespace Farm_Management.Migrations
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
                     b.Property<string>("BatchNumber")
-                        .IsRequired()
                         .HasMaxLength(50)
                         .HasColumnType("nvarchar(50)");
 
-                    b.Property<DateTime>("CreatedAt")
+                    b.Property<DateTime?>("CreatedAt")
                         .HasColumnType("datetime2");
 
-                    b.Property<DateTime>("ExpiryDate")
+                    b.Property<DateTime?>("ExpiryDate")
                         .HasColumnType("datetime2");
 
                     b.Property<string>("InvoiceNumber")
                         .HasMaxLength(50)
                         .HasColumnType("nvarchar(50)");
 
-                    b.Property<int>("PesticideRegistryId")
+                    b.Property<int?>("PesticideRegistryId")
                         .HasColumnType("int");
 
-                    b.Property<DateTime>("PurchaseDate")
+                    b.Property<DateTime?>("PurchaseDate")
                         .HasColumnType("datetime2");
 
-                    b.Property<decimal>("StockQuantity")
+                    b.Property<decimal?>("StockQuantity")
                         .HasColumnType("decimal(18,2)");
 
                     b.Property<string>("Supplier")
-                        .IsRequired()
                         .HasMaxLength(200)
                         .HasColumnType("nvarchar(200)");
 
@@ -300,14 +891,13 @@ namespace Farm_Management.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
-                    b.Property<DateTime>("ApplicationDate")
+                    b.Property<DateTime?>("ApplicationDate")
                         .HasColumnType("datetime2");
 
-                    b.Property<DateTime>("CreatedAt")
+                    b.Property<DateTime?>("CreatedAt")
                         .HasColumnType("datetime2");
 
                     b.Property<string>("Dosage")
-                        .IsRequired()
                         .HasMaxLength(100)
                         .HasColumnType("nvarchar(100)");
 
@@ -318,27 +908,27 @@ namespace Farm_Management.Migrations
                     b.Property<string>("Notes")
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<int>("PHI_Days")
+                    b.Property<int?>("PHI_Days")
                         .HasColumnType("int");
 
-                    b.Property<int>("PesticideId")
+                    b.Property<int?>("PesticideId")
                         .HasColumnType("int");
 
                     b.Property<string>("PhotoPath")
                         .HasMaxLength(500)
                         .HasColumnType("nvarchar(500)");
 
-                    b.Property<int>("PlantId")
+                    b.Property<int?>("PlantId")
                         .HasColumnType("int");
 
                     b.Property<string>("Reason")
                         .HasMaxLength(500)
                         .HasColumnType("nvarchar(500)");
 
-                    b.Property<DateTime>("SafeHarvestDate")
+                    b.Property<DateTime?>("SafeHarvestDate")
                         .HasColumnType("datetime2");
 
-                    b.Property<int>("WorkerId")
+                    b.Property<int?>("WorkerId")
                         .HasColumnType("int");
 
                     b.HasKey("Id");
@@ -361,17 +951,16 @@ namespace Farm_Management.Migrations
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
                     b.Property<string>("ActiveIngredient")
-                        .IsRequired()
                         .HasMaxLength(200)
                         .HasColumnType("nvarchar(200)");
 
-                    b.Property<DateTime>("CreatedAt")
+                    b.Property<DateTime?>("CreatedAt")
                         .HasColumnType("datetime2");
 
                     b.Property<string>("Notes")
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<int>("PHI_Days")
+                    b.Property<int?>("PHI_Days")
                         .HasColumnType("int");
 
                     b.Property<string>("RecommendedDosage")
@@ -379,7 +968,6 @@ namespace Farm_Management.Migrations
                         .HasColumnType("nvarchar(200)");
 
                     b.Property<string>("Status")
-                        .IsRequired()
                         .HasMaxLength(20)
                         .HasColumnType("nvarchar(20)");
 
@@ -392,7 +980,6 @@ namespace Farm_Management.Migrations
                         .HasColumnType("nvarchar(500)");
 
                     b.Property<string>("TradeName")
-                        .IsRequired()
                         .HasMaxLength(200)
                         .HasColumnType("nvarchar(200)");
 
@@ -409,15 +996,21 @@ namespace Farm_Management.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
-                    b.Property<int>("AreaId")
+                    b.Property<int?>("AreaId")
                         .HasColumnType("int");
 
                     b.Property<string>("BatchCode")
-                        .IsRequired()
                         .HasMaxLength(50)
                         .HasColumnType("nvarchar(50)");
 
-                    b.Property<DateTime>("CreatedAt")
+                    b.Property<string>("CareProtocol")
+                        .HasMaxLength(2000)
+                        .HasColumnType("nvarchar(2000)");
+
+                    b.Property<DateTime?>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<DateTime?>("DeletedAt")
                         .HasColumnType("datetime2");
 
                     b.Property<DateTime?>("ExpectedHarvestDate")
@@ -426,23 +1019,40 @@ namespace Farm_Management.Migrations
                     b.Property<DateTime?>("ExpectedSafeHarvestDate")
                         .HasColumnType("datetime2");
 
+                    b.Property<bool?>("IsDeleted")
+                        .HasColumnType("bit");
+
+                    b.Property<string>("NextSeasonChanges")
+                        .HasMaxLength(3000)
+                        .HasColumnType("nvarchar(3000)");
+
                     b.Property<string>("Notes")
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<int>("PlantTypeId")
+                    b.Property<int?>("PlantTypeId")
                         .HasColumnType("int");
 
-                    b.Property<DateTime>("PlantingDate")
+                    b.Property<DateTime?>("PlantingDate")
                         .HasColumnType("datetime2");
 
                     b.Property<int?>("Quantity")
                         .HasColumnType("int");
 
-                    b.Property<int>("SeedId")
+                    b.Property<int?>("Revision")
+                        .HasColumnType("int");
+
+                    b.Property<string>("SeasonName")
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.Property<string>("SeasonReview")
+                        .HasMaxLength(3000)
+                        .HasColumnType("nvarchar(3000)");
+
+                    b.Property<int?>("SeedId")
                         .HasColumnType("int");
 
                     b.Property<string>("Status")
-                        .IsRequired()
                         .HasMaxLength(20)
                         .HasColumnType("nvarchar(20)");
 
@@ -450,8 +1060,7 @@ namespace Farm_Management.Migrations
 
                     b.HasIndex("AreaId");
 
-                    b.HasIndex("BatchCode")
-                        .IsUnique();
+                    b.HasIndex("BatchCode");
 
                     b.HasIndex("PlantTypeId");
 
@@ -468,7 +1077,10 @@ namespace Farm_Management.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
-                    b.Property<DateTime>("CreatedAt")
+                    b.Property<DateTime?>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<DateTime?>("DeletedAt")
                         .HasColumnType("datetime2");
 
                     b.Property<string>("Description")
@@ -477,12 +1089,19 @@ namespace Farm_Management.Migrations
                     b.Property<int?>("GrowthCycleDays")
                         .HasColumnType("int");
 
+                    b.Property<bool?>("IsDeleted")
+                        .HasColumnType("bit");
+
                     b.Property<string>("Name")
-                        .IsRequired()
                         .HasMaxLength(100)
                         .HasColumnType("nvarchar(100)");
 
+                    b.Property<int?>("Revision")
+                        .HasColumnType("int");
+
                     b.HasKey("Id");
+
+                    b.HasIndex("Name");
 
                     b.ToTable("PlantTypes");
                 });
@@ -499,18 +1118,26 @@ namespace Farm_Management.Migrations
                         .HasMaxLength(50)
                         .HasColumnType("nvarchar(50)");
 
-                    b.Property<DateTime>("CreatedAt")
+                    b.Property<DateTime?>("CreatedAt")
                         .HasColumnType("datetime2");
+
+                    b.Property<DateTime?>("DeletedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<int?>("InputLotId")
+                        .HasColumnType("int");
 
                     b.Property<string>("InvoiceNumber")
                         .HasMaxLength(50)
                         .HasColumnType("nvarchar(50)");
 
-                    b.Property<bool>("IsCertified")
+                    b.Property<bool?>("IsCertified")
+                        .HasColumnType("bit");
+
+                    b.Property<bool?>("IsDeleted")
                         .HasColumnType("bit");
 
                     b.Property<string>("Name")
-                        .IsRequired()
                         .HasMaxLength(100)
                         .HasColumnType("nvarchar(100)");
 
@@ -518,16 +1145,22 @@ namespace Farm_Management.Migrations
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("Origin")
-                        .IsRequired()
                         .HasMaxLength(200)
                         .HasColumnType("nvarchar(200)");
 
-                    b.Property<int>("PlantTypeId")
+                    b.Property<int?>("PlantTypeId")
+                        .HasColumnType("int");
+
+                    b.Property<int?>("Revision")
                         .HasColumnType("int");
 
                     b.HasKey("Id");
 
+                    b.HasIndex("InputLotId");
+
                     b.HasIndex("PlantTypeId");
+
+                    b.HasIndex("PlantTypeId", "Name");
 
                     b.ToTable("Seeds");
                 });
@@ -540,10 +1173,10 @@ namespace Farm_Management.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
-                    b.Property<DateTime>("CreatedAt")
+                    b.Property<DateTime?>("CreatedAt")
                         .HasColumnType("datetime2");
 
-                    b.Property<DateTime>("IrrigationDate")
+                    b.Property<DateTime?>("IrrigationDate")
                         .HasColumnType("datetime2");
 
                     b.Property<string>("Method")
@@ -553,16 +1186,16 @@ namespace Farm_Management.Migrations
                     b.Property<string>("Notes")
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<int>("PlantId")
+                    b.Property<int?>("PlantId")
                         .HasColumnType("int");
 
                     b.Property<decimal?>("WaterAmount")
                         .HasColumnType("decimal(18,2)");
 
-                    b.Property<int>("WaterSourceId")
+                    b.Property<int?>("WaterSourceId")
                         .HasColumnType("int");
 
-                    b.Property<int>("WorkerId")
+                    b.Property<int?>("WorkerId")
                         .HasColumnType("int");
 
                     b.HasKey("Id");
@@ -584,14 +1217,13 @@ namespace Farm_Management.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
-                    b.Property<DateTime>("CreatedAt")
+                    b.Property<DateTime?>("CreatedAt")
                         .HasColumnType("datetime2");
 
-                    b.Property<bool>("IsQualified")
+                    b.Property<bool?>("IsQualified")
                         .HasColumnType("bit");
 
                     b.Property<string>("Name")
-                        .IsRequired()
                         .HasMaxLength(100)
                         .HasColumnType("nvarchar(100)");
 
@@ -622,25 +1254,23 @@ namespace Farm_Management.Migrations
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
                     b.Property<string>("Code")
-                        .IsRequired()
                         .HasMaxLength(20)
                         .HasColumnType("nvarchar(20)");
 
-                    b.Property<DateTime>("CreatedAt")
+                    b.Property<DateTime?>("CreatedAt")
                         .HasColumnType("datetime2");
 
-                    b.Property<decimal>("DailySalary")
+                    b.Property<decimal?>("DailySalary")
                         .HasColumnType("decimal(18,2)");
 
                     b.Property<string>("FullName")
-                        .IsRequired()
                         .HasMaxLength(100)
                         .HasColumnType("nvarchar(100)");
 
                     b.Property<DateTime?>("HireDate")
                         .HasColumnType("datetime2");
 
-                    b.Property<bool>("IsActive")
+                    b.Property<bool?>("IsActive")
                         .HasColumnType("bit");
 
                     b.Property<string>("Phone")
@@ -649,231 +1279,55 @@ namespace Farm_Management.Migrations
 
                     b.HasKey("Id");
 
-                    b.HasIndex("Code")
-                        .IsUnique();
+                    b.HasIndex("Code");
 
                     b.ToTable("Workers");
                 });
 
-            modelBuilder.Entity("Farm_Management.Models.AttendanceLog", b =>
+            modelBuilder.Entity("Farm_Management.Models.WorkerAdvance", b =>
                 {
-                    b.HasOne("Farm_Management.Models.Worker", "Worker")
-                        .WithMany("AttendanceLogs")
-                        .HasForeignKey("WorkerId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
 
-                    b.Navigation("Worker");
-                });
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
-            modelBuilder.Entity("Farm_Management.Models.FertilizationLog", b =>
-                {
-                    b.HasOne("Farm_Management.Models.Fertilizer", "Fertilizer")
-                        .WithMany("FertilizationLogs")
-                        .HasForeignKey("FertilizerId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
+                    b.Property<decimal?>("Amount")
+                        .HasPrecision(18, 2)
+                        .HasColumnType("decimal(18,2)");
 
-                    b.HasOne("Farm_Management.Models.Plant", "Plant")
-                        .WithMany("FertilizationLogs")
-                        .HasForeignKey("PlantId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
+                    b.Property<DateTime?>("CreatedAt")
+                        .HasColumnType("datetime2");
 
-                    b.HasOne("Farm_Management.Models.Worker", "Worker")
-                        .WithMany("FertilizationLogs")
-                        .HasForeignKey("WorkerId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
+                    b.Property<string>("Notes")
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
 
-                    b.Navigation("Fertilizer");
+                    b.Property<DateTime?>("PaidDate")
+                        .HasColumnType("datetime2");
 
-                    b.Navigation("Plant");
+                    b.Property<int?>("PayrollMonth")
+                        .HasColumnType("int");
 
-                    b.Navigation("Worker");
-                });
+                    b.Property<int?>("PayrollYear")
+                        .HasColumnType("int");
 
-            modelBuilder.Entity("Farm_Management.Models.HarvestBatch", b =>
-                {
-                    b.HasOne("Farm_Management.Models.Plant", "Plant")
-                        .WithMany("HarvestBatches")
-                        .HasForeignKey("PlantId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
+                    b.Property<string>("Reference")
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
 
-                    b.HasOne("Farm_Management.Models.Worker", "Worker")
-                        .WithMany("HarvestBatches")
-                        .HasForeignKey("WorkerId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
+                    b.Property<int?>("WorkerId")
+                        .HasColumnType("int");
 
-                    b.Navigation("Plant");
+                    b.HasKey("Id");
 
-                    b.Navigation("Worker");
-                });
+                    b.HasIndex("Reference");
 
-            modelBuilder.Entity("Farm_Management.Models.Pesticide", b =>
-                {
-                    b.HasOne("Farm_Management.Models.PesticideRegistry", "PesticideRegistry")
-                        .WithMany("Pesticides")
-                        .HasForeignKey("PesticideRegistryId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
+                    b.HasIndex("WorkerId");
 
-                    b.Navigation("PesticideRegistry");
-                });
+                    b.HasIndex("PayrollYear", "PayrollMonth", "WorkerId");
 
-            modelBuilder.Entity("Farm_Management.Models.PesticideApplicationLog", b =>
-                {
-                    b.HasOne("Farm_Management.Models.Pesticide", "Pesticide")
-                        .WithMany("PesticideApplicationLogs")
-                        .HasForeignKey("PesticideId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
-
-                    b.HasOne("Farm_Management.Models.Plant", "Plant")
-                        .WithMany("PesticideApplicationLogs")
-                        .HasForeignKey("PlantId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
-
-                    b.HasOne("Farm_Management.Models.Worker", "Worker")
-                        .WithMany("PesticideApplicationLogs")
-                        .HasForeignKey("WorkerId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
-
-                    b.Navigation("Pesticide");
-
-                    b.Navigation("Plant");
-
-                    b.Navigation("Worker");
-                });
-
-            modelBuilder.Entity("Farm_Management.Models.Plant", b =>
-                {
-                    b.HasOne("Farm_Management.Models.Area", "Area")
-                        .WithMany("Plants")
-                        .HasForeignKey("AreaId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
-
-                    b.HasOne("Farm_Management.Models.PlantType", "PlantType")
-                        .WithMany("Plants")
-                        .HasForeignKey("PlantTypeId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
-
-                    b.HasOne("Farm_Management.Models.Seed", "Seed")
-                        .WithMany("Plants")
-                        .HasForeignKey("SeedId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
-
-                    b.Navigation("Area");
-
-                    b.Navigation("PlantType");
-
-                    b.Navigation("Seed");
-                });
-
-            modelBuilder.Entity("Farm_Management.Models.Seed", b =>
-                {
-                    b.HasOne("Farm_Management.Models.PlantType", "PlantType")
-                        .WithMany("Seeds")
-                        .HasForeignKey("PlantTypeId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
-
-                    b.Navigation("PlantType");
-                });
-
-            modelBuilder.Entity("Farm_Management.Models.WaterIrrigationLog", b =>
-                {
-                    b.HasOne("Farm_Management.Models.Plant", "Plant")
-                        .WithMany("WaterIrrigationLogs")
-                        .HasForeignKey("PlantId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
-
-                    b.HasOne("Farm_Management.Models.WaterSource", "WaterSource")
-                        .WithMany("WaterIrrigationLogs")
-                        .HasForeignKey("WaterSourceId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
-
-                    b.HasOne("Farm_Management.Models.Worker", "Worker")
-                        .WithMany("WaterIrrigationLogs")
-                        .HasForeignKey("WorkerId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
-
-                    b.Navigation("Plant");
-
-                    b.Navigation("WaterSource");
-
-                    b.Navigation("Worker");
-                });
-
-            modelBuilder.Entity("Farm_Management.Models.Area", b =>
-                {
-                    b.Navigation("Plants");
-                });
-
-            modelBuilder.Entity("Farm_Management.Models.Fertilizer", b =>
-                {
-                    b.Navigation("FertilizationLogs");
-                });
-
-            modelBuilder.Entity("Farm_Management.Models.Pesticide", b =>
-                {
-                    b.Navigation("PesticideApplicationLogs");
-                });
-
-            modelBuilder.Entity("Farm_Management.Models.PesticideRegistry", b =>
-                {
-                    b.Navigation("Pesticides");
-                });
-
-            modelBuilder.Entity("Farm_Management.Models.Plant", b =>
-                {
-                    b.Navigation("FertilizationLogs");
-
-                    b.Navigation("HarvestBatches");
-
-                    b.Navigation("PesticideApplicationLogs");
-
-                    b.Navigation("WaterIrrigationLogs");
-                });
-
-            modelBuilder.Entity("Farm_Management.Models.PlantType", b =>
-                {
-                    b.Navigation("Plants");
-
-                    b.Navigation("Seeds");
-                });
-
-            modelBuilder.Entity("Farm_Management.Models.Seed", b =>
-                {
-                    b.Navigation("Plants");
-                });
-
-            modelBuilder.Entity("Farm_Management.Models.WaterSource", b =>
-                {
-                    b.Navigation("WaterIrrigationLogs");
-                });
-
-            modelBuilder.Entity("Farm_Management.Models.Worker", b =>
-                {
-                    b.Navigation("AttendanceLogs");
-
-                    b.Navigation("FertilizationLogs");
-
-                    b.Navigation("HarvestBatches");
-
-                    b.Navigation("PesticideApplicationLogs");
-
-                    b.Navigation("WaterIrrigationLogs");
+                    b.ToTable("WorkerAdvances");
                 });
 #pragma warning restore 612, 618
         }

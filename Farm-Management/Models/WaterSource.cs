@@ -1,4 +1,6 @@
-﻿using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
+using Microsoft.AspNetCore.Mvc.ModelBinding.Validation;
+using System.ComponentModel.DataAnnotations;
 
 namespace Farm_Management.Models
 {
@@ -6,10 +8,9 @@ namespace Farm_Management.Models
     {
         public int Id { get; set; }
 
-        [Required(ErrorMessage = "Tên nguồn nước là bắt buộc")]
         [StringLength(100)]
         [Display(Name = "Tên nguồn nước")]
-        public string Name { get; set; } = string.Empty;
+        public string? Name { get; set; }
 
         [Display(Name = "Loại nguồn")]
         [StringLength(50)]
@@ -23,15 +24,16 @@ namespace Farm_Management.Models
         public DateTime? TestDate { get; set; }
 
         [Display(Name = "Đạt chuẩn")]
-        public bool IsQualified { get; set; } = true;
+        public bool? IsQualified { get; set; } = true;
 
         [Display(Name = "Ghi chú")]
         public string? Notes { get; set; }
 
         [Display(Name = "Ngày tạo")]
-        public DateTime CreatedAt { get; set; } = DateTime.Now;
+        public DateTime? CreatedAt { get; set; } = DateTime.Now;
 
         // Navigation
+        [NotMapped, ValidateNever]
         public ICollection<WaterIrrigationLog> WaterIrrigationLogs { get; set; } = new List<WaterIrrigationLog>();
     }
 }

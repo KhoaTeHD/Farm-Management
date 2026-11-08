@@ -1,104 +1,84 @@
-﻿@inject Microsoft.Extensions.Configuration.IConfiguration Configuration
+@{
+    var controller = ViewContext.RouteData.Values["controller"]?.ToString();
+    var action = ViewContext.RouteData.Values["action"]?.ToString();
+    string Active(string c, string? a = null) => controller == c && (a == null || action == a) ? "is-active" : "";
+    var culture = new System.Globalization.CultureInfo("vi-VN");
+}
 <!DOCTYPE html>
 <html lang="vi">
 <head>
     <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>@ViewData["Title"] - Farm Management</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="theme-color" content="#173d32" />
+    <title>@ViewData["Title"] · Farm Management</title>
     <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
     <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
-    <link rel="stylesheet" href="~/css/dropdown-menu.css" asp-append-version="true" />
-
-    @* Leaflet CSS - chỉ load khi cần *@
-    @if (ViewData["LoadMap"] != null)
+    @if (ViewData["LoadMap"] as bool? == true)
     {
         <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     }
-
     @await RenderSectionAsync("Styles", required: false)
 </head>
 <body>
-    <header>
-        <nav class="navbar navbar-expand-lg navbar-farm">
-            <div class="container">
-                <a class="navbar-brand" asp-controller="Home" asp-action="Index">
-                    🌿 Farm Management
-                </a>
-                <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navMenu">
-                    <span class="navbar-toggler-icon"></span>
-                </button>
-                <div class="collapse navbar-collapse" id="navMenu">
-                    <ul class="navbar-nav me-auto">
-                        <!-- Dropdown: Quản lý cơ sở -->
-                        <li class="nav-item dropdown">
-                            <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown">
-                                🏗️ Cơ sở
-                            </a>
-                            <ul class="dropdown-menu">
-                                <li><a class="dropdown-item" asp-controller="Areas" asp-action="Index">📍 Vùng trồng</a></li>
-                                <li><a class="dropdown-item" asp-controller="PlantTypes" asp-action="Index">🌱 Loại cây</a></li>
-                                <li><a class="dropdown-item" asp-controller="Workers" asp-action="Index">👷 Công nhân</a></li>
-                                <li><a class="dropdown-item" asp-controller="WaterSources" asp-action="Index">💧 Nguồn nước</a></li>
-                            </ul>
-                        </li>
-
-                        <!-- Dropdown: Payroll -->
-                        <li class="nav-item dropdown">
-                            <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown">
-                                💰 Lương & Chấm công
-                            </a>
-                            <ul class="dropdown-menu">
-                                <li><a class="dropdown-item" asp-controller="Attendance" asp-action="Calendar">📅 Chấm công (Calendar)</a></li>
-                                <li><a class="dropdown-item" asp-controller="Attendance" asp-action="Index">📋 Chấm công (Danh sách)</a></li>
-                                <li><hr class="dropdown-divider"></li>
-                                <li><a class="dropdown-item" asp-controller="Payroll" asp-action="Index">💵 Bảng lương</a></li>
-                                <li><a class="dropdown-item" asp-controller="Payroll" asp-action="Reports">📊 Báo cáo lương</a></li>
-                            </ul>
-                        </li>
-
-                        <!-- Dropdown: VietGAP (Future) -->
-                        <li class="nav-item dropdown">
-                            <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown">
-                                🌾 VietGAP
-                            </a>
-                            <ul class="dropdown-menu">
-                                <li><a class="dropdown-item" asp-controller="Plants" asp-action="Index">🌱 Lô cây</a></li>
-                                <li><a class="dropdown-item" asp-controller="Pesticides" asp-action="Index">🧪 Thuốc BVTV</a></li>
-                                <li><a class="dropdown-item" asp-controller="Fertilizers" asp-action="Index">🌿 Phân bón</a></li>
-                                <li><hr class="dropdown-divider"></li>
-                                <li><a class="dropdown-item" asp-controller="Harvest" asp-action="Index">📦 Thu hoạch</a></li>
-                                <li><a class="dropdown-item" asp-controller="Traceability" asp-action="Index">🔍 Truy xuất</a></li>
-                            </ul>
-                        </li>
-                    </ul>
-                </div>
-            </div>
+    <a class="skip-link" href="#main-content">Chuyển đến nội dung</a>
+    <partial name="_Icons" />
+    <div class="sidebar-backdrop" data-close-menu></div>
+    <aside class="app-sidebar" id="app-navigation" aria-label="Điều hướng chính">
+        <button type="button" class="mobile-menu-close" data-close-menu aria-label="Đóng menu">×</button>
+        <a asp-controller="Home" asp-action="Index" class="brand">
+            <span class="brand-mark"><svg class="icon"><use href="#i-leaf" /></svg></span>
+            <span>Farm<span class="brand-light"> Management</span><small>KHÔNG GIAN NÔNG TRẠI</small></span>
+        </a>
+        <div class="workspace-label"><span class="status-dot"></span> Quản lý trang trại</div>
+        <nav class="side-nav">
+            <span class="nav-section-label">KHÔNG GIAN LÀM VIỆC</span>
+            <a asp-controller="Home" asp-action="Index" class="@Active("Home", "Index")"><svg class="icon"><use href="#i-grid" /></svg>Tổng quan</a>
+            <a asp-controller="Areas" asp-action="Index" class="@Active("Areas")"><svg class="icon"><use href="#i-map" /></svg>Vùng trồng</a>
+            <a asp-controller="Workers" asp-action="Index" class="@Active("Workers")"><svg class="icon"><use href="#i-users" /></svg>Công nhân</a>
+            <span class="nav-section-label">CÂY TRỒNG</span>
+            <a asp-controller="Plants" asp-action="Index" class="@(controller is "Plants" or "CropJournal" or "CarePlans" ? "is-active" : "")"><svg class="icon"><use href="#i-leaf"/></svg>Theo dõi cây trồng</a>
+            <a asp-controller="PlantTypes" asp-action="Index" class="@Active("PlantTypes")"><svg class="icon"><use href="#i-list"/></svg>Loại cây</a>
+            <a asp-controller="Seeds" asp-action="Index" class="@Active("Seeds")"><svg class="icon"><use href="#i-leaf"/></svg>Giống cây</a>
+            <a asp-controller="FarmRecords" asp-action="Index" class="@Active("FarmRecords")"><svg class="icon"><use href="#i-list"/></svg>Vật tư & kiểm nghiệm</a><a asp-controller="HarvestTrace" asp-action="Index" class="@Active("HarvestTrace")"><svg class="icon"><use href="#i-leaf"/></svg>Truy xuất thu hoạch</a><a asp-controller="RecordHistory" asp-action="Index" class="@Active("RecordHistory")"><svg class="icon"><use href="#i-clock"/></svg>Lịch sử & lưu hồ sơ</a><span class="nav-section-label">CHẤM CÔNG</span>
+            <a asp-controller="Attendance" asp-action="Calendar" class="@Active("Attendance", "Calendar")"><svg class="icon"><use href="#i-calendar" /></svg>Lịch chấm công</a>
+            <a asp-controller="Attendance" asp-action="Index" class="@(controller == "Attendance" && action != "Calendar" ? "is-active" : "")"><svg class="icon"><use href="#i-list" /></svg>Chấm công theo ngày</a>
+            <span class="nav-section-label">TIỀN LƯƠNG</span>
+            <a asp-controller="Payroll" asp-action="Index" class="@Active("Payroll")"><svg class="icon"><use href="#i-list" /></svg>Bảng lương tháng</a>
+            <a asp-controller="Advances" asp-action="Index" class="@Active("Advances")"><svg class="icon"><use href="#i-list"/></svg>Tạm ứng công nhân</a>
         </nav>
-    </header>
-
-    <div class="container mt-3 mb-5">
-        <main role="main">
+        <div class="sidebar-bottom">
+            <div class="sidebar-note"><svg class="icon"><use href="#i-leaf" /></svg><strong>Cùng chăm một mùa xanh</strong><p>Ghi chép rõ ràng. Quản lý nhẹ nhàng.</p></div>
+            <a asp-controller="Home" asp-action="Privacy"><svg class="icon"><use href="#i-info" /></svg>Thông tin ứng dụng</a>
+            <small>Farm Management · 2026</small>
+        </div>
+    </aside>
+    <div class="app-workspace">
+        <header class="app-topbar">
+            <button type="button" class="icon-button mobile-menu-toggle" aria-label="Mở menu điều hướng" aria-controls="app-navigation" aria-expanded="false"><svg class="icon"><use href="#i-menu" /></svg></button>
+            <div class="breadcrumb-label">Không gian làm việc <span>/</span> <strong>@ViewData["Title"]</strong></div>
+            <div class="topbar-date"><svg class="icon"><use href="#i-calendar" /></svg>@DateTime.Today.ToString("dddd, dd/MM/yyyy", culture)</div>
+        </header>
+        <main id="main-content" class="app-content" tabindex="-1">
+            @if (TempData["Success"] is string success)
+            {
+                <div class="alert alert-success alert-dismissible fade show" role="status"><svg class="icon"><use href="#i-check" /></svg><span>@success</span><button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Đóng thông báo"></button></div>
+            }
+            @if (TempData["Error"] is string error)
+            {
+                <div class="alert alert-danger alert-dismissible fade show" role="alert"><svg class="icon"><use href="#i-info" /></svg><span>@error</span><button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Đóng thông báo"></button></div>
+            }
             @RenderBody()
         </main>
+        <footer class="app-footer"><span>Farm Management</span><span>Chăm từng vùng đất, vững từng mùa vụ.</span></footer>
     </div>
-
-    <footer class="footer text-center">
-        <div class="container">
-            &copy; 2026 Farm Management - VietGAP |
-            <a asp-controller="Home" asp-action="Privacy" class="text-white">Chính sách</a>
-        </div>
-    </footer>
-
+    <div id="toast-region" class="toast-region" aria-live="polite" aria-atomic="true"></div>
     <script src="~/lib/jquery/dist/jquery.min.js"></script>
     <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
     <script src="~/js/site.js" asp-append-version="true"></script>
-
-    @* Leaflet JS - chỉ load khi cần *@
-    @if (ViewData["LoadMap"] != null)
+    @if (ViewData["LoadMap"] as bool? == true)
     {
         <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     }
-
     @await RenderSectionAsync("Scripts", required: false)
 </body>
 </html>

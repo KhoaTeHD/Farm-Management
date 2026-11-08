@@ -1,24 +1,27 @@
-﻿using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
+using Microsoft.AspNetCore.Mvc.ModelBinding.Validation;
+using System.ComponentModel.DataAnnotations;
 
 namespace Farm_Management.Models
 {
-    public class Seed
+    public class Seed : ICultivationRecord
     {
         public int Id { get; set; }
+        public int? Revision { get; set; }
+        public bool? IsDeleted { get; set; }
+        public DateTime? DeletedAt { get; set; }
 
-        [Required]
         [Display(Name = "Loại cây")]
-        public int PlantTypeId { get; set; }
+        public int? PlantTypeId { get; set; }
+        public int? InputLotId { get; set; }
 
-        [Required(ErrorMessage = "Tên giống là bắt buộc")]
         [StringLength(100)]
         [Display(Name = "Tên giống")]
-        public string Name { get; set; } = string.Empty;
+        public string? Name { get; set; }
 
-        [Required(ErrorMessage = "Nguồn gốc là bắt buộc")]
         [StringLength(200)]
         [Display(Name = "Nguồn gốc / Nhà cung cấp")]
-        public string Origin { get; set; } = string.Empty;
+        public string? Origin { get; set; }
 
         [StringLength(50)]
         [Display(Name = "Số lô giống")]
@@ -29,16 +32,18 @@ namespace Farm_Management.Models
         public string? InvoiceNumber { get; set; }
 
         [Display(Name = "Có chứng nhận")]
-        public bool IsCertified { get; set; }
+        public bool? IsCertified { get; set; }
 
         [Display(Name = "Ghi chú")]
         public string? Notes { get; set; }
 
         [Display(Name = "Ngày tạo")]
-        public DateTime CreatedAt { get; set; } = DateTime.Now;
+        public DateTime? CreatedAt { get; set; } = DateTime.Now;
 
         // Navigation
-        public PlantType PlantType { get; set; } = null!;
+        [NotMapped, ValidateNever]
+        public PlantType? PlantType { get; set; }
+        [NotMapped, ValidateNever]
         public ICollection<Plant> Plants { get; set; } = new List<Plant>();
     }
 }

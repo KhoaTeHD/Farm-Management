@@ -1,4 +1,5 @@
-﻿using System;
+using Farm_Management.Models.ViewModels;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
@@ -34,11 +35,11 @@ namespace Farm_Management.Controllers
             if (id == null) return NotFound();
 
             var area = await _context.Areas
-                .Include(a => a.Plants)
                 .FirstOrDefaultAsync(m => m.Id == id);
             
             if (area == null) return NotFound();
 
+            area.Plants = await _context.Plants.Where(p => p.AreaId == area.Id).ToListAsync();
             return View(area);
         }
 
@@ -46,23 +47,26 @@ namespace Farm_Management.Controllers
         // Tạo mới vùng trồng
         public IActionResult Create()
         {
-            return View();
+            return View(new AreaForm());
         }
 
         // POST: Areas/Create
         // xử lý form tạo mới vùng trồng
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Create([Bind("Id,Name,Acreage,GpsCoordinates,SoilType,SoilTestResult,SoilTestDate,Notes,CreatedAt")] Area area)
+        public async Task<IActionResult> Create([Bind("Name,Acreage,GpsCoordinates,SoilType,SoilTestResult,SoilTestDate,Notes")] AreaForm form)
         {
+            var area = form.ToEntity();
+            await using var transaction = await _context.BeginBusinessWriteAsync();
             if (ModelState.IsValid)
             {
                 _context.Add(area);
                 await _context.SaveChangesAsync();
+                await transaction.CommitAsync();
                 TempData["Success"] = "Thêm vùng trồng thành công!";
                 return RedirectToAction(nameof(Index));
             }
-            return View(area);
+            return View(AreaForm.FromEntity(area));
         }
 
         // GET: Areas/Edit/5
@@ -74,22 +78,29 @@ namespace Farm_Management.Controllers
             var area = await _context.Areas.FindAsync(id);
             if (area == null) return NotFound();
 
-            return View(area);
+            return View(AreaForm.FromEntity(area));
         }
 
         // POST: Areas/Edit/5
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Edit(int id, [Bind("Id,Name,Acreage,GpsCoordinates,SoilType,SoilTestResult,SoilTestDate,Notes,CreatedAt")] Area area)
+        public async Task<IActionResult> Edit(int id, [Bind("Id,Name,Acreage,GpsCoordinates,SoilType,SoilTestResult,SoilTestDate,Notes,CreatedAt")] AreaForm form)
         {
+            var area = form.ToEntity();
+            await using var transaction = await _context.BeginBusinessWriteAsync();
             if (id != area.Id) return NotFound();
+            var existing = await _context.Areas.FirstOrDefaultAsync(x => x.Id == id);
+            if (existing == null) return NotFound();
+            area.CreatedAt = existing.CreatedAt;
+            area.Revision = existing.Revision; area.IsDeleted = existing.IsDeleted; area.DeletedAt = existing.DeletedAt;
 
             if (ModelState.IsValid)
             {
                 try
                 {
-                    _context.Update(area);
+                    _context.Entry(existing).CurrentValues.SetValues(area);
                     await _context.SaveChangesAsync();
+                    await transaction.CommitAsync();
                     TempData["Success"] = "Cập nhật vùng trồng thành công!";
                 }
                 catch (DbUpdateConcurrencyException)
@@ -105,7 +116,7 @@ namespace Farm_Management.Controllers
                 }
                 return RedirectToAction(nameof(Index));
             }
-            return View(area);
+            return View(AreaForm.FromEntity(area));
         }
 
         // GET: Areas/Delete/5
@@ -126,12 +137,13 @@ namespace Farm_Management.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> DeleteConfirmed(int id)
         {
+            await using var transaction = await _context.BeginBusinessWriteAsync();
             var area = await _context.Areas.FindAsync(id);
             if (area != null)
             {
                 // Kiểm tra có Plant nào đang dùng Area này không
-                var hasPlants = await _context.Plants.AnyAsync(p => p.AreaId == id);
-                if (hasPlants)
+                var hasPlants = await _context.Plants.IgnoreQueryFilters().AnyAsync(p => p.AreaId == id);
+                if (hasPlants || await _context.FieldResources.IgnoreQueryFilters().AnyAsync(r=>r.AreaId==id))
                 {
                     TempData["Error"] = "Không thể xóa vùng trồng đang có lô cây!";
                     return RedirectToAction(nameof(Index));
@@ -139,6 +151,7 @@ namespace Farm_Management.Controllers
 
                 _context.Areas.Remove(area);
                 await _context.SaveChangesAsync();
+                await transaction.CommitAsync();
                 TempData["Success"] = "Xóa vùng trồng thành công!";
             }
             return RedirectToAction(nameof(Index));

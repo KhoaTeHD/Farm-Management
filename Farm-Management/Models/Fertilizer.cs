@@ -1,4 +1,6 @@
-﻿using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
+using Microsoft.AspNetCore.Mvc.ModelBinding.Validation;
+using System.ComponentModel.DataAnnotations;
 
 namespace Farm_Management.Models
 {
@@ -6,10 +8,9 @@ namespace Farm_Management.Models
     {
         public int Id { get; set; }
 
-        [Required(ErrorMessage = "Tên phân bón là bắt buộc")]
         [StringLength(200)]
         [Display(Name = "Tên phân bón")]
-        public string Name { get; set; } = string.Empty;
+        public string? Name { get; set; }
 
         [Display(Name = "Loại phân")]
         [StringLength(50)]
@@ -19,13 +20,12 @@ namespace Farm_Management.Models
         [StringLength(50)]
         public string? NPKRatio { get; set; }
 
-        [Required(ErrorMessage = "Nhà cung cấp là bắt buộc")]
         [StringLength(200)]
         [Display(Name = "Nhà cung cấp")]
-        public string Supplier { get; set; } = string.Empty;
+        public string? Supplier { get; set; }
 
         [Display(Name = "Số lượng tồn kho")]
-        public decimal StockQuantity { get; set; }
+        public decimal? StockQuantity { get; set; }
 
         [StringLength(20)]
         [Display(Name = "Đơn vị")]
@@ -40,9 +40,10 @@ namespace Farm_Management.Models
         public string? InvoiceNumber { get; set; }
 
         [Display(Name = "Ngày tạo")]
-        public DateTime CreatedAt { get; set; } = DateTime.Now;
+        public DateTime? CreatedAt { get; set; } = DateTime.Now;
 
         // Navigation
+        [NotMapped, ValidateNever]
         public ICollection<FertilizationLog> FertilizationLogs { get; set; } = new List<FertilizationLog>();
     }
 }

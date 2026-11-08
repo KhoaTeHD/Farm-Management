@@ -1,4 +1,6 @@
-﻿using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
+using Microsoft.AspNetCore.Mvc.ModelBinding.Validation;
+using System.ComponentModel.DataAnnotations;
 
 namespace Farm_Management.Models
 {
@@ -6,26 +8,21 @@ namespace Farm_Management.Models
     {
         public int Id { get; set; }
 
-        [Required]
         [Display(Name = "Lô cây")]
-        public int PlantId { get; set; }
+        public int? PlantId { get; set; }
 
-        [Required]
         [Display(Name = "Thuốc sử dụng")]
-        public int PesticideId { get; set; }
+        public int? PesticideId { get; set; }
 
-        [Required]
         [Display(Name = "Người thực hiện")]
-        public int WorkerId { get; set; }
+        public int? WorkerId { get; set; }
 
-        [Required(ErrorMessage = "Ngày phun là bắt buộc")]
         [Display(Name = "Ngày phun")]
-        public DateTime ApplicationDate { get; set; }
+        public DateTime? ApplicationDate { get; set; }
 
-        [Required(ErrorMessage = "Liều lượng là bắt buộc")]
         [StringLength(100)]
         [Display(Name = "Liều lượng")]
-        public string Dosage { get; set; } = string.Empty;
+        public string? Dosage { get; set; }
 
         [Display(Name = "Phương pháp phun")]
         [StringLength(100)]
@@ -36,11 +33,11 @@ namespace Farm_Management.Models
         public string? Reason { get; set; }
 
         [Display(Name = "Thời gian cách ly (ngày)")]
-        public int PHI_Days { get; set; } // Copy từ PesticideRegistry tại thời điểm phun
+        public int? PHI_Days { get; set; } // Copy từ PesticideRegistry tại thời điểm phun
 
         [Display(Name = "Ngày an toàn thu hoạch")]
         [DataType(DataType.Date)]
-        public DateTime SafeHarvestDate { get; set; } // ApplicationDate + PHI_Days
+        public DateTime? SafeHarvestDate { get; set; } // ApplicationDate + PHI_Days
 
         [Display(Name = "Ảnh minh chứng")]
         [StringLength(500)]
@@ -50,11 +47,14 @@ namespace Farm_Management.Models
         public string? Notes { get; set; }
 
         [Display(Name = "Ngày tạo")]
-        public DateTime CreatedAt { get; set; } = DateTime.Now;
+        public DateTime? CreatedAt { get; set; } = DateTime.Now;
 
         // Navigation
-        public Plant Plant { get; set; } = null!;
-        public Pesticide Pesticide { get; set; } = null!;
-        public Worker Worker { get; set; } = null!;
+        [NotMapped, ValidateNever]
+        public Plant? Plant { get; set; }
+        [NotMapped, ValidateNever]
+        public Pesticide? Pesticide { get; set; }
+        [NotMapped, ValidateNever]
+        public Worker? Worker { get; set; }
     }
 }

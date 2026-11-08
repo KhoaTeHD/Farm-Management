@@ -1,4 +1,6 @@
-﻿using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
+using Microsoft.AspNetCore.Mvc.ModelBinding.Validation;
+using System.ComponentModel.DataAnnotations;
 
 namespace Farm_Management.Models
 {
@@ -6,26 +8,21 @@ namespace Farm_Management.Models
     {
         public int Id { get; set; }
 
-        [Required]
         [Display(Name = "Lô cây")]
-        public int PlantId { get; set; }
+        public int? PlantId { get; set; }
 
-        [Required]
         [Display(Name = "Phân bón")]
-        public int FertilizerId { get; set; }
+        public int? FertilizerId { get; set; }
 
-        [Required]
         [Display(Name = "Người thực hiện")]
-        public int WorkerId { get; set; }
+        public int? WorkerId { get; set; }
 
-        [Required(ErrorMessage = "Ngày bón là bắt buộc")]
         [Display(Name = "Ngày bón")]
-        public DateTime ApplicationDate { get; set; }
+        public DateTime? ApplicationDate { get; set; }
 
-        [Required(ErrorMessage = "Liều lượng là bắt buộc")]
         [StringLength(100)]
         [Display(Name = "Liều lượng")]
-        public string Dosage { get; set; } = string.Empty;
+        public string? Dosage { get; set; }
 
         [Display(Name = "Phương pháp bón")]
         [StringLength(100)]
@@ -35,11 +32,14 @@ namespace Farm_Management.Models
         public string? Notes { get; set; }
 
         [Display(Name = "Ngày tạo")]
-        public DateTime CreatedAt { get; set; } = DateTime.Now;
+        public DateTime? CreatedAt { get; set; } = DateTime.Now;
 
         // Navigation
-        public Plant Plant { get; set; } = null!;
-        public Fertilizer Fertilizer { get; set; } = null!;
-        public Worker Worker { get; set; } = null!;
+        [NotMapped, ValidateNever]
+        public Plant? Plant { get; set; }
+        [NotMapped, ValidateNever]
+        public Fertilizer? Fertilizer { get; set; }
+        [NotMapped, ValidateNever]
+        public Worker? Worker { get; set; }
     }
 }

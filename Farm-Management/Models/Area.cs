@@ -1,15 +1,19 @@
-﻿using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
+using Microsoft.AspNetCore.Mvc.ModelBinding.Validation;
+using System.ComponentModel.DataAnnotations;
 
 namespace Farm_Management.Models
 {
-    public class Area
+    public class Area : ICultivationRecord
     {
         public int Id { get; set; }
+        public int? Revision { get; set; }
+        public bool? IsDeleted { get; set; }
+        public DateTime? DeletedAt { get; set; }
 
-        [Required(ErrorMessage = "Tên vùng trồng là bắt buộc")]
         [StringLength(100)]
         [Display(Name = "Tên vùng trồng")]
-        public string Name { get; set; } = string.Empty;
+        public string? Name { get; set; }
 
         [Display(Name = "Diện tích (m²)")]
         public decimal? Acreage { get; set; }
@@ -33,9 +37,10 @@ namespace Farm_Management.Models
         public string? Notes { get; set; }
 
         [Display(Name = "Ngày tạo")]
-        public DateTime CreatedAt { get; set; } = DateTime.Now;
+        public DateTime? CreatedAt { get; set; } = DateTime.Now;
 
         // Navigation
+        [NotMapped, ValidateNever]
         public ICollection<Plant> Plants { get; set; } = new List<Plant>();
     }
 }

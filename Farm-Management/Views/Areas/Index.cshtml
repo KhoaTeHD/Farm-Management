@@ -1,90 +1,10 @@
-﻿@model IEnumerable<Farm_Management.Models.Area>
-@{
-    ViewData["Title"] = "Vùng trồng";
-}
-
-<div class="page-header">
-    <h2>📍 Vùng trồng</h2>
-    <a asp-action="Create" class="btn btn-farm">+ Thêm vùng trồng</a>
+@model IEnumerable<Farm_Management.Models.Area>
+@{ ViewData["Title"] = "Vùng trồng"; var areas = Model.ToList(); }
+<div class="page-header"><div><p class="eyebrow">CƠ SỞ TRANG TRẠI</p><h1>Vùng trồng</h1><p class="page-description">Mỗi vùng đất, một hồ sơ rõ ràng. Quản lý diện tích, đất và vị trí canh tác.</p></div><a asp-action="Create" class="btn btn-farm"><svg class="icon"><use href="#i-plus" /></svg>Thêm vùng trồng</a></div>
+<div class="card" data-list data-page-size="10">
+    <div class="list-toolbar"><div class="search-field"><svg class="icon"><use href="#i-search" /></svg><input class="form-control" type="search" data-list-search placeholder="Tìm tên vùng, loại đất…" aria-label="Tìm vùng trồng" /></div><div class="toolbar-controls"><span class="result-count">@areas.Count vùng trồng</span><a class="btn btn-sm btn-outline-secondary" asp-action="Index" title="Làm mới danh sách">Làm mới</a></div></div>
+    @if (!areas.Any()) {<div class="empty-state"><svg class="icon empty-icon"><use href="#i-map" /></svg><h3>Chưa có vùng trồng nào</h3><p>Thêm vùng đầu tiên để lưu diện tích và đánh dấu vị trí của trang trại.</p><a asp-action="Create" class="btn btn-farm">Thêm vùng đầu tiên</a></div>}
+    else {<div class="table-responsive"><table class="table table-farm table-responsive-card"><thead><tr><th>Tên vùng trồng</th><th>Diện tích</th><th>Loại đất</th><th>Xét nghiệm đất</th><th class="text-end">Thao tác</th></tr></thead><tbody>
+    @foreach(var area in areas){<tr data-list-row data-search="@area.Name @area.SoilType @area.GpsCoordinates"><td data-label="Vùng trồng"><a asp-action="Details" asp-route-id="@area.Id" class="fw-bold">@(area.Name ?? "Chưa có tên vùng")</a><small class="d-block text-muted mt-1">@(string.IsNullOrWhiteSpace(area.GpsCoordinates) ? "Chưa có tọa độ" : "Đã đánh dấu vị trí")</small></td><td data-label="Diện tích">@(area.Acreage?.ToString("N2", System.Globalization.CultureInfo.GetCultureInfo("vi-VN")) ?? "—") <small class="text-muted">m²</small></td><td data-label="Loại đất">@(area.SoilType ?? "Chưa cập nhật")</td><td data-label="Xét nghiệm">@if(area.SoilTestDate.HasValue){<span class="badge bg-success">@area.SoilTestDate.Value.ToString("dd/MM/yyyy")</span>}else{<span class="badge bg-secondary">Chưa xét nghiệm</span>}</td><td data-label="" class="text-end"><div class="action-buttons d-inline-flex gap-2"><a asp-action="Edit" asp-route-id="@area.Id" class="btn btn-sm btn-outline-farm" aria-label="Sửa vùng @(area.Name)"><svg class="icon"><use href="#i-edit" /></svg>Sửa</a><a asp-action="Delete" asp-route-id="@area.Id" class="btn btn-sm btn-outline-danger" aria-label="Xóa vùng @(area.Name)"><svg class="icon"><use href="#i-trash" /></svg>Xóa</a></div></td></tr>}
+    </tbody></table></div><div class="filter-empty" data-list-empty hidden>Không tìm thấy vùng trồng phù hợp. Hãy thử từ khóa khác.</div><div class="list-footer"><span data-list-count></span><div class="list-pagination"><button class="btn btn-sm btn-outline-secondary" type="button" data-list-prev aria-label="Trang trước">← Trước</button><span data-list-page></span><button class="btn btn-sm btn-outline-secondary" type="button" data-list-next aria-label="Trang sau">Sau →</button></div></div>}
 </div>
-
-@if (TempData["Success"] != null)
-{
-    <div class="alert alert-farm-success alert-dismissible fade show">
-        ✅ @TempData["Success"]
-        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-    </div>
-}
-@if (TempData["Error"] != null)
-{
-    <div class="alert alert-farm-error alert-dismissible fade show">
-        ❌ @TempData["Error"]
-        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-    </div>
-}
-
-@if (!Model.Any())
-{
-    <div class="empty-state">
-        <div class="icon">🌾</div>
-        <h5>Chưa có vùng trồng nào</h5>
-        <p class="text-muted">Hãy thêm vùng trồng đầu tiên để bắt đầu!</p>
-        <a asp-action="Create" class="btn btn-farm">+ Thêm vùng trồng</a>
-    </div>
-}
-else
-{
-    <!-- Desktop: Table | Mobile: Cards -->
-    <div class="table-responsive">
-        <table class="table table-farm table-responsive-card">
-            <thead>
-                <tr>
-                    <th>Tên vùng trồng</th>
-                    <th>Diện tích</th>
-                    <th>Loại đất</th>
-                    <th>XN đất</th>
-                    <th class="text-end">Thao tác</th>
-                </tr>
-            </thead>
-            <tbody>
-                @foreach (var item in Model)
-                {
-                    <tr>
-                        <td data-label="Tên">
-                            <a asp-action="Details" asp-route-id="@item.Id" class="fw-bold text-decoration-none" style="color: var(--farm-green);">
-                                @item.Name
-                            </a>
-                        </td>
-                        <td data-label="Diện tích">
-                            @if (item.Acreage.HasValue)
-                            {
-                                @item.Acreage.Value.ToString("N0") <small class="text-muted"> m²</small>
-                            }
-                            else
-                            {
-                                <span class="text-muted">—</span>
-                            }
-                        </td>
-                        <td data-label="Loại đất">@(item.SoilType ?? "—")</td>
-                        <td data-label="XN đất">
-                            @if (item.SoilTestDate.HasValue)
-                            {
-                                <span class="badge bg-success">@item.SoilTestDate.Value.ToString("dd/MM/yyyy")</span>
-                            }
-                            else
-                            {
-                                <span class="badge bg-warning text-dark">Chưa XN</span>
-                            }
-                        </td>
-                        <td data-label="" class="text-end">
-                            <div class="action-buttons d-inline-flex gap-1">
-                                <a asp-action="Edit" asp-route-id="@item.Id" class="btn btn-sm btn-outline-farm">Sửa</a>
-                                <a asp-action="Delete" asp-route-id="@item.Id" class="btn btn-sm btn-outline-danger">Xóa</a>
-                            </div>
-                        </td>
-                    </tr>
-                }
-            </tbody>
-        </table>
-    </div>
-}
