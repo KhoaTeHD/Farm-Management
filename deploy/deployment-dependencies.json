@@ -1,0 +1,7 @@
+{
+  "WinAcmeVersion": "v2.2.9.1701",
+  "WinAcmeUrl": "https://github.com/win-acme/win-acme/releases/download/v2.2.9.1701/win-acme.v2.2.9.1701.x64.trimmed.zip",
+  "WinAcmeSha256": "F4DC3B144841FFDBA391CE168C273D7A686D45A359075E30EE4BF4EE186857D6",
+  "HostingUrl": "https://builds.dotnet.microsoft.com/dotnet/aspnetcore/Runtime/8.0.33/dotnet-hosting-8.0.33-win.exe",
+  "HostingSha512": "0da4a03349a86a2e028b26f2d0ee705f556e59bf4821fa9432ef9a7b6608e0fcce225250829c92d58e14e57da0758cf564b4205d4f7c69a6079658e6ee0dea1e"
+}

@@ -22,6 +22,9 @@
 
   <ItemGroup>
     <Content Update="appsettings.Local.json" CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="Never" />
+    <Content Update="appsettings.Local.example.json" CopyToPublishDirectory="Never" />
+    <Content Update="appsettings.Development.json" CopyToPublishDirectory="Never" />
+    <Content Remove="wwwroot/uploads/**" />
   </ItemGroup>
 
 </Project>

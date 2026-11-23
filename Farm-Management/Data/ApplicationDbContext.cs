@@ -36,10 +36,12 @@ namespace Farm_Management.Data
         public DbSet<FieldResource> FieldResources { get; set; }
         public DbSet<InspectionReport> InspectionReports { get; set; }
         public DbSet<HarvestTrace> HarvestTraces { get; set; }
+        public DbSet<UserAccount> UserAccounts { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             base.OnModelCreating(modelBuilder);
+            modelBuilder.Entity<UserAccount>().HasIndex(e => e.NormalizedUsername);
             modelBuilder.Entity<Plant>().HasQueryFilter(e => e.IsDeleted != true);
             modelBuilder.Entity<Area>().HasQueryFilter(e => e.IsDeleted != true);
             modelBuilder.Entity<PlantType>().HasQueryFilter(e => e.IsDeleted != true);

@@ -1,0 +1,7 @@
+@model List<Farm_Management.Models.ViewModels.AccountForm>
+@{ ViewData["Title"] = "Quản lý tài khoản"; }
+<div class="page-header"><div><p class="eyebrow">QUẢN TRỊ</p><h1>Quản lý tài khoản</h1><p class="page-description">Cấp tài khoản riêng cho từng người. Khóa khi ngừng làm việc để giữ hồ sơ đã ghi.</p></div><a asp-action="Create" class="btn btn-farm">Thêm tài khoản</a></div>
+<div class="alert alert-info">Quản trị được quản lý tài khoản và mọi nghiệp vụ. Nhân viên được dùng các nghiệp vụ trang trại, chấm công, lương và tạm ứng; không được quản lý tài khoản. Cấp lại mật khẩu sẽ buộc đổi mật khẩu ở lần đăng nhập tiếp theo.</div>
+<div class="card"><div class="table-responsive"><table class="table align-middle mb-0"><thead><tr><th>Tên đăng nhập</th><th>Họ tên</th><th>Quyền</th><th>Trạng thái</th><th>Thao tác</th></tr></thead><tbody>
+@foreach (var u in Model) { <tr><td>@u.Username</td><td>@u.DisplayName</td><td>@(u.Role == "Admin" ? "Quản trị" : u.Role == "Staff" ? "Nhân viên" : "Thiếu / sai quyền")</td><td>@(u.IsActive ? "Đang hoạt động" : "Đã khóa")</td><td><a asp-action="Edit" asp-route-id="@u.Id" class="btn btn-outline-farm btn-sm">Sửa / cấp lại mật khẩu</a></td></tr> }
+</tbody></table></div></div>

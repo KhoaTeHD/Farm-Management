@@ -1,0 +1,10 @@
+@model Farm_Management.Models.ViewModels.LoginForm
+@{ Layout = "_AuthLayout"; ViewData["Title"] = "Đăng nhập"; }
+<p class="text-muted">Đăng nhập bằng tài khoản được quản trị trang trại cấp để tiếp tục ghi chép và xem hồ sơ.</p>
+<form asp-action="Login" method="post">
+<input type="hidden" asp-for="ReturnUrl"/><div asp-validation-summary="All" class="text-danger" role="alert"></div>
+<div class="mb-3"><label asp-for="Username" class="form-label"></label><input asp-for="Username" class="form-control" autocomplete="username" autofocus required/></div>
+<div class="mb-3"><label asp-for="Password" class="form-label"></label><input asp-for="Password" class="form-control" autocomplete="current-password" required/></div>
+<button class="btn btn-farm w-100" type="submit">Đăng nhập</button></form>
+<p class="form-text mt-3">Quên mật khẩu hoặc chưa có tài khoản? Liên hệ quản trị trang trại để được cấp lại. Không chia sẻ mật khẩu cho người khác.</p>
+@section Scripts { <partial name="_ValidationScriptsPartial"/> }

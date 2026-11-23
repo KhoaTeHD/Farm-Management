@@ -47,6 +47,7 @@ namespace Farm_Management.Controllers
             return View();
         }
 
+        [Microsoft.AspNetCore.Authorization.AllowAnonymous]
         public IActionResult Status(int code)
         {
             code = code is >= 400 and <= 599 ? code : 404;
@@ -55,6 +56,7 @@ namespace Farm_Management.Controllers
         }
 
         [ResponseCache(Duration = 0, Location = ResponseCacheLocation.None, NoStore = true)]
+        [Microsoft.AspNetCore.Authorization.AllowAnonymous]
         public IActionResult Error()
         {
             return View(new ErrorViewModel { RequestId = Activity.Current?.Id ?? HttpContext.TraceIdentifier });

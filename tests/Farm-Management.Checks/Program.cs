@@ -19,7 +19,7 @@ var options = new DbContextOptionsBuilder<ApplicationDbContext>()
 using (var context = new ApplicationDbContext(options))
 {
     var model = context.GetService<IDesignTimeModel>().Model;
-    Check(model.GetEntityTypes().Count() == 24, "Exactly 24 persisted entities");
+    Check(model.GetEntityTypes().Count() == 25, "Exactly 25 persisted entities, including nullable user accounts");
     foreach (var entity in model.GetEntityTypes())
     {
         Check(!entity.GetForeignKeys().Any(), $"No hard foreign keys: {entity.DisplayName()}");
@@ -138,7 +138,7 @@ try
             await migrator.MigrateAsync("20260211071346_AddAttendanceLog");
             throw new Exception("Rollback unexpectedly accepted incomplete data");
         }
-        catch (SqlException ex) when (ex.Number is 50002 or 50003 or 50004 or 50005 or 50006) { }
+        catch (SqlException ex) when (ex.Number is 50002 or 50003 or 50004 or 50005 or 50006 or 50007) { }
         Check(await db.Workers.AnyAsync(w => w.Code == null), "Rollback failure preserves NULL data");
     }
 
@@ -168,6 +168,7 @@ try
         try { await client.GetAsync("/"); break; }
         catch (HttpRequestException) when (i < 40 && !app.HasExited) { await Task.Delay(250); }
     }
+    await AccountChecks.Integration(client, dbOptions, Check);
     foreach (var route in new[] { "/", "/Areas", "/Areas/Create", "/Workers", "/Workers/Create", "/Workers/Edit/2",
         "/Attendance", "/Attendance?missingDate=true", "/Attendance/Calendar?year=2026&month=11",
         "/Attendance/Create", "/Attendance/Edit/2", "/Attendance/Delete/2", "/Attendance/Details/2",
@@ -246,6 +247,7 @@ try
     await SeasonJournalChecks.Integration(client, dbOptions, Check);
     await ProvenanceChecks.Integration(client, dbOptions, Check);
     await MaterialUsageChecks.Integration(client, dbOptions, Check);
+    await AccountChecks.RateLimit(client.BaseAddress!, Check);
     Console.WriteLine("PASS: disposable SQL Server migration and MVC/HTTP checks including monthly payroll.");
     if (args.Contains("--preview"))
     {

@@ -1,0 +1,12 @@
+@model Farm_Management.Models.ViewModels.AccountForm
+@{ ViewData["Title"] = Model.Id == 0 ? "Thêm tài khoản" : "Sửa tài khoản"; }
+<div class="page-header"><div><p class="eyebrow">QUẢN TRỊ</p><h1>@ViewData["Title"]</h1></div><a asp-action="Index" class="btn btn-outline-secondary">Danh sách tài khoản</a></div>
+<form asp-action="@(Model.Id == 0 ? "Create" : "Edit")" asp-route-id="@(Model.Id == 0 ? (int?)null : Model.Id)" method="post" class="card p-4 account-form">
+<input type="hidden" asp-for="Id"/><input type="hidden" asp-for="Revision"/><div asp-validation-summary="All" class="text-danger" role="alert"></div>
+<div class="mb-3"><label asp-for="Username" class="form-label"></label><input asp-for="Username" class="form-control" required minlength="3" maxlength="50" pattern="[a-zA-Z0-9._-]{3,50}" autocomplete="off"/><p class="form-text">3–50 chữ không dấu, số, dấu chấm, gạch ngang hoặc gạch dưới. Không phân biệt hoa thường.</p></div>
+<div class="mb-3"><label asp-for="DisplayName" class="form-label"></label><input asp-for="DisplayName" class="form-control" required maxlength="100"/></div>
+<div class="mb-3"><label asp-for="Role" class="form-label"></label><select asp-for="Role" class="form-select"><option value="Staff">Nhân viên</option><option value="Admin">Quản trị</option></select></div>
+<div class="mb-3 form-check"><input asp-for="IsActive" class="form-check-input"/><label asp-for="IsActive" class="form-check-label"></label></div>
+<div class="mb-3"><label asp-for="NewPassword" class="form-label">@(Model.Id == 0 ? "Mật khẩu tạm (bắt buộc)" : "Cấp lại mật khẩu (để trống nếu giữ nguyên)")</label><input asp-for="NewPassword" class="form-control" autocomplete="new-password" minlength="12" maxlength="128" required="@(Model.Id == 0)"/><p class="form-text">12–128 ký tự, có chữ và số. Gửi riêng mật khẩu tạm cho đúng người; người nhận phải đổi trước khi dùng. Khi lưu, các phiên cũ của tài khoản này sẽ bị thu hồi.</p></div>
+<div class="d-flex gap-2"><button type="submit" class="btn btn-farm">Lưu tài khoản</button><a asp-action="Index" class="btn btn-outline-secondary">Hủy</a></div></form>
+@section Scripts { <partial name="_ValidationScriptsPartial"/> }

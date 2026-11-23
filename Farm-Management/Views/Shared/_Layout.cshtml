@@ -45,8 +45,17 @@
             <span class="nav-section-label">TIỀN LƯƠNG</span>
             <a asp-controller="Payroll" asp-action="Index" class="@Active("Payroll")"><svg class="icon"><use href="#i-list" /></svg>Bảng lương tháng</a>
             <a asp-controller="Advances" asp-action="Index" class="@Active("Advances")"><svg class="icon"><use href="#i-list"/></svg>Tạm ứng công nhân</a>
+            @if (User.IsInRole("Admin"))
+            {
+                <span class="nav-section-label">QUẢN TRỊ</span>
+                <a asp-controller="Accounts" asp-action="Index" class="@Active("Accounts")"><svg class="icon"><use href="#i-users"/></svg>Quản lý tài khoản</a>
+            }
         </nav>
         <div class="sidebar-bottom">
+            @if (User.Identity?.IsAuthenticated == true)
+            {
+                <div class="account-menu"><strong>@User.FindFirst("display_name")?.Value</strong><small>@User.Identity.Name · @(User.IsInRole("Admin") ? "Quản trị" : "Nhân viên")</small><a asp-controller="Account" asp-action="ChangePassword">Đổi mật khẩu</a><form asp-controller="Account" asp-action="Logout" method="post"><button type="submit" class="btn btn-outline-light btn-sm">Đăng xuất</button></form></div>
+            }
             <div class="sidebar-note"><svg class="icon"><use href="#i-leaf" /></svg><strong>Cùng chăm một mùa xanh</strong><p>Ghi chép rõ ràng. Quản lý nhẹ nhàng.</p></div>
             <a asp-controller="Home" asp-action="Privacy"><svg class="icon"><use href="#i-info" /></svg>Thông tin ứng dụng</a>
             <small>Farm Management · 2026</small>

@@ -1,0 +1,95 @@
+name: Deploy to IIS VPS
+
+on:
+  push:
+    branches:
+      - master
+  workflow_dispatch:
+
+concurrency:
+  group: deploy-production
+  cancel-in-progress: false
+
+jobs:
+  build-test-deploy:
+    runs-on: windows-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup .NET 8 SDK
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '8.0.x'
+
+      - name: Install dotnet-ef tool
+        shell: pwsh
+        run: dotnet tool install --global dotnet-ef --version 8.*
+
+      - name: Restore and build
+        shell: pwsh
+        run: |
+          dotnet restore Farm-Management.sln
+          dotnet build Farm-Management.sln -c Release --no-restore
+
+      - name: Run project checks
+        shell: pwsh
+        run: dotnet run --project tests/Farm-Management.Checks -c Release --no-build
+
+      - name: Build IIS deployment package
+        shell: pwsh
+        run: |
+          & .\deploy\Publish-Iis.ps1
+          $zip = Get-ChildItem -Path .\artifacts -Filter 'FarmManagement-IIS-*.zip' | Sort-Object LastWriteTime -Descending | Select-Object -First 1
+          if (-not $zip) { throw 'Deployment zip not found.' }
+          "PACKAGE_ZIP=$($zip.FullName)" >> $env:GITHUB_ENV
+          "PACKAGE_NAME=$($zip.Name)" >> $env:GITHUB_ENV
+
+      - name: Configure SSH key
+        shell: pwsh
+        env:
+          VPS_SSH_KEY: ${{ secrets.VPS_SSH_KEY }}
+          VPS_HOST: ${{ secrets.VPS_HOST }}
+        run: |
+          if ([string]::IsNullOrWhiteSpace($env:VPS_SSH_KEY)) { throw 'Missing secret VPS_SSH_KEY' }
+          if ([string]::IsNullOrWhiteSpace($env:VPS_HOST)) { throw 'Missing secret VPS_HOST' }
+          $sshDir = Join-Path $env:USERPROFILE '.ssh'
+          New-Item -ItemType Directory -Path $sshDir -Force | Out-Null
+          $keyPath = Join-Path $sshDir 'deploy_key'
+          $env:VPS_SSH_KEY.Trim() + "`n" | Set-Content -Path $keyPath -Encoding Ascii -NoNewline
+          & icacls.exe $keyPath /inheritance:r /grant:r "${env:USERNAME}:(R)" | Out-Null
+          ssh-keyscan -H $env:VPS_HOST | Out-File -FilePath (Join-Path $sshDir 'known_hosts') -Encoding Ascii
+          "SSH_KEY_PATH=$keyPath" >> $env:GITHUB_ENV
+
+      - name: Upload package and update script to VPS
+        shell: pwsh
+        env:
+          VPS_HOST: ${{ secrets.VPS_HOST }}
+          VPS_USER: ${{ secrets.VPS_USER }}
+        run: |
+          $remoteStage = 'C:\ProgramData\ThienMyFarm\staging'
+          $mkCmd = [Convert]::ToBase64String([Text.Encoding]::Unicode.GetBytes("New-Item -ItemType Directory -Force -Path '$remoteStage' | Out-Null"))
+          ssh -i $env:SSH_KEY_PATH "$($env:VPS_USER)@$($env:VPS_HOST)" "powershell -NoProfile -EncodedCommand $mkCmd"
+          if ($LASTEXITCODE -ne 0) { throw 'Failed to create remote staging directory.' }
+
+          scp -i $env:SSH_KEY_PATH $env:PACKAGE_ZIP "$($env:VPS_USER)@$($env:VPS_HOST):C:/ProgramData/ThienMyFarm/staging/$($env:PACKAGE_NAME)"
+          if ($LASTEXITCODE -ne 0) { throw 'Failed to upload deployment package.' }
+
+          scp -i $env:SSH_KEY_PATH .\deploy\Update-Iis.ps1 .\deploy\Deployment.Common.ps1 "$($env:VPS_USER)@$($env:VPS_HOST):C:/ProgramData/ThienMyFarm/staging/"
+          if ($LASTEXITCODE -ne 0) { throw 'Failed to upload update scripts.' }
+
+      - name: Deploy on VPS
+        shell: pwsh
+        env:
+          VPS_HOST: ${{ secrets.VPS_HOST }}
+          VPS_USER: ${{ secrets.VPS_USER }}
+        run: |
+          $remoteZip = "C:\ProgramData\ThienMyFarm\staging\$($env:PACKAGE_NAME)"
+          $remoteScript = 'C:\ProgramData\ThienMyFarm\staging\Update-Iis.ps1'
+          $deployCmd = [Convert]::ToBase64String([Text.Encoding]::Unicode.GetBytes("& '$remoteScript' -PackageZip '$remoteZip'"))
+          ssh -i $env:SSH_KEY_PATH "$($env:VPS_USER)@$($env:VPS_HOST)" "powershell -NoProfile -ExecutionPolicy Bypass -EncodedCommand $deployCmd"
+          if ($LASTEXITCODE -ne 0) { throw 'Remote IIS deployment failed.' }
+
+          $cleanCmd = [Convert]::ToBase64String([Text.Encoding]::Unicode.GetBytes("Remove-Item -LiteralPath '$remoteZip' -Force -ErrorAction SilentlyContinue"))
+          ssh -i $env:SSH_KEY_PATH "$($env:VPS_USER)@$($env:VPS_HOST)" "powershell -NoProfile -EncodedCommand $cleanCmd"

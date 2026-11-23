@@ -6,7 +6,7 @@ using Microsoft.EntityFrameworkCore;
 
 namespace Farm_Management.Services;
 
-// Records the name supplied by the operator; this application does not authenticate that identity.
+// New audit entries use the authenticated account, never the form's claimed identity.
 public class RecordChangeFilter(ApplicationDbContext db) : IAsyncActionFilter
 {
     public async Task OnActionExecutionAsync(ActionExecutingContext context, ActionExecutionDelegate next)
@@ -32,7 +32,7 @@ public class RecordChangeFilter(ApplicationDbContext db) : IAsyncActionFilter
         if (isPost)
         {
             var fields = await context.HttpContext.Request.ReadFormAsync();
-            var actor = fields["ChangedBy"].ToString().Trim(); if (actor.Length == 0) actor = fields["Recorder"].ToString().Trim();
+            var actor = context.HttpContext.User.Identity?.Name ?? "";
             var reason = fields["ChangeReason"].ToString().Trim();
             if (actor.Length is < 1 or > 100 || reason.Length > 1000 || (!creating && reason.Length == 0))
             { context.Result = new BadRequestObjectResult("Điền tên người ghi và lý do sửa / lưu trữ / khôi phục (tối đa 1.000 ký tự), rồi gửi lại."); return; }

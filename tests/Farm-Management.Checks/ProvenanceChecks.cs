@@ -41,7 +41,8 @@ internal static class ProvenanceChecks
         var noReason=Input();noReason["Id"]=inputId.ToString();noReason["ChangeReason"]="";
         check((await Post($"/FarmRecords/EditInput/{inputId}",noReason)).StatusCode==HttpStatusCode.BadRequest,"Changes require a reason even when forging an HTTP request");
         var noActor=Input("NO-ACTOR");noActor["ChangedBy"]="";
-        check((await Post("/FarmRecords/CreateInput",noActor)).StatusCode==HttpStatusCode.BadRequest,"Provenance writes require a named self-declared operator");
+        check((await Post("/FarmRecords/CreateInput",noActor)).StatusCode==HttpStatusCode.Redirect,"Authenticated operator is recorded even when the form omits its claimed name");
+        await using(var actorDb=new ApplicationDbContext(options))check(await actorDb.CultivationAudits.AnyAsync(a=>a.Actor==AccountChecks.AdminName && a.AfterJson!=null && a.AfterJson.Contains("NO-ACTOR")),"Audit identity comes from the signed-in account, not the posted actor field");
         Dictionary<string,string> Journal(string kind="Fertilize",string amount="6",string date="2024-02-01")=>new(){["PlantId"]=plantId.ToString(),["RecordCode"]=Guid.NewGuid().ToString("N"),["Date"]=date,["Kind"]=kind,["Recorder"]="Người làm QA",["Summary"]="Bón theo lượng thực tế đã cân",["InputLotId"]=inputId.ToString(),["WaterResourceId"]=waterId.ToString(),["Material"]="Nội dung tùy ý không được thay nguồn thật",["Amount"]=amount,["Unit"]=kind=="Water"?"l":"kg",["Quality"]="Chất lượng QA"};
         var quota=await Task.WhenAll(Post("/CropJournal/Create",Journal(),$"/CropJournal/Create?plantId={plantId}"),Post("/CropJournal/Create",Journal(),$"/CropJournal/Create?plantId={plantId}"));
         check(quota.Count(r=>r.StatusCode==HttpStatusCode.Redirect)==1 && quota.Count(r=>r.StatusCode==HttpStatusCode.OK)==1,"Concurrent consumption cannot exceed the recorded input quantity");
@@ -79,7 +80,7 @@ internal static class ProvenanceChecks
         {
             var t=await db.HarvestTraces.FindAsync(traceId);check(t!.Code==code && t.Revision>initialRevision && t.SnapshotJson!=savedJson,"Explicit reissue preserves the code and stores a revised snapshot");
             var a=await db.CultivationAudits.Where(a=>a.RecordType=="HarvestTrace" && a.RecordId==traceId && a.Action=="Updated").OrderByDescending(a=>a.Id).FirstAsync();traceAuditId=a.Id;
-            check(a.BeforeJson!.Contains("HD-QA-001") && a.AfterJson!.Contains("HD-QA-001") && a.Actor=="Người kiểm thử QA" && !string.IsNullOrWhiteSpace(a.Reason),"Audit retains before/after trace data, operator and reason");
+            check(a.BeforeJson!.Contains("HD-QA-001") && a.AfterJson!.Contains("HD-QA-001") && a.Actor==AccountChecks.AdminName && !string.IsNullOrWhiteSpace(a.Reason),"Audit retains before/after trace data and authenticated operator instead of the supplied form name");
         }
         check((await client.GetAsync($"/RecordHistory/TraceVersion/{traceAuditId}?side=Before")).StatusCode==HttpStatusCode.OK && (await client.GetAsync($"/RecordHistory/TraceVersion/{traceAuditId}?side=After")).StatusCode==HttpStatusCode.OK,"Both historical trace versions can be viewed");
         await Post($"/CropJournal/Delete/{harvestId}",new());
