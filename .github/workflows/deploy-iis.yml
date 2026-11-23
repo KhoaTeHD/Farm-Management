@@ -35,7 +35,7 @@ jobs:
 
       - name: Run project checks
         shell: pwsh
-        run: dotnet run --project tests/Farm-Management.Checks -c Release --no-build
+        run: dotnet run --project tests/Farm-Management.Checks -c Release
 
       - name: Build IIS deployment package
         shell: pwsh
