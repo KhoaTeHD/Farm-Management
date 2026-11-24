@@ -19,7 +19,7 @@ var options = new DbContextOptionsBuilder<ApplicationDbContext>()
 using (var context = new ApplicationDbContext(options))
 {
     var model = context.GetService<IDesignTimeModel>().Model;
-    Check(model.GetEntityTypes().Count() == 25, "Exactly 25 persisted entities, including nullable user accounts");
+    Check(model.GetEntityTypes().Count() == 27, "Exactly 27 persisted entities, including MaterialItem, CropJournalWorker, and UserAccount");
     foreach (var entity in model.GetEntityTypes())
     {
         Check(!entity.GetForeignKeys().Any(), $"No hard foreign keys: {entity.DisplayName()}");
@@ -138,7 +138,7 @@ try
             await migrator.MigrateAsync("20260211071346_AddAttendanceLog");
             throw new Exception("Rollback unexpectedly accepted incomplete data");
         }
-        catch (SqlException ex) when (ex.Number is 50002 or 50003 or 50004 or 50005 or 50006 or 50007) { }
+        catch (SqlException ex) when (ex.Number is 50002 or 50003 or 50004 or 50005 or 50006 or 50007 or 50008) { }
         Check(await db.Workers.AnyAsync(w => w.Code == null), "Rollback failure preserves NULL data");
     }
 
@@ -152,8 +152,10 @@ try
         UseShellExecute = false, CreateNoWindow = true,
         RedirectStandardOutput = true, RedirectStandardError = true
     };
-    var configuration = new DirectoryInfo(AppContext.BaseDirectory).Parent!.Name;
-    start.ArgumentList.Add(Path.Combine(root, "Farm-Management", "bin", configuration, "net8.0", "Farm-Management.dll"));
+    var configuration = new DirectoryInfo(AppContext.BaseDirectory.TrimEnd(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar)).Parent!.Name;
+    var appDll = Path.Combine(root, "Farm-Management", "bin", configuration, "net8.0", "Farm-Management.dll");
+    if (!File.Exists(appDll)) appDll = Path.Combine(root, "Farm-Management", "bin", "Debug", "net8.0", "Farm-Management.dll");
+    start.ArgumentList.Add(appDll);
     start.ArgumentList.Add("--urls");
     start.ArgumentList.Add($"http://127.0.0.1:{port}");
     start.Environment["ConnectionStrings__DefaultConnection"] = connection.ConnectionString;
@@ -169,7 +171,8 @@ try
         catch (HttpRequestException) when (i < 40 && !app.HasExited) { await Task.Delay(250); }
     }
     await AccountChecks.Integration(client, dbOptions, Check);
-    foreach (var route in new[] { "/", "/Areas", "/Areas/Create", "/Workers", "/Workers/Create", "/Workers/Edit/2",
+    foreach (var route in new[] { "/", "/Materials", "/Materials/Create", "/CropJournal", "/CropJournal/Create",
+        "/Areas", "/Areas/Create", "/Workers", "/Workers/Create", "/Workers/Edit/2",
         "/Attendance", "/Attendance?missingDate=true", "/Attendance/Calendar?year=2026&month=11",
         "/Attendance/Create", "/Attendance/Edit/2", "/Attendance/Delete/2", "/Attendance/Details/2",
         "/Areas/Edit/1", "/Areas/Details/1", "/Areas/Delete/1", "/Workers/Details/2", "/Workers/Delete/2", "/Home/Privacy", "/Home/Error" })

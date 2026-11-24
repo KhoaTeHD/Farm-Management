@@ -1,0 +1,203 @@
+@model Farm_Management.Models.ViewModels.DailyWorkIndexViewModel
+@using Farm_Management.Services
+@{
+    ViewData["Title"] = "Việc hằng ngày";
+    var vi = System.Globalization.CultureInfo.GetCultureInfo("vi-VN");
+    var today = DateTime.Today.ToString("yyyy-MM-dd");
+    var sevenDaysAgo = DateTime.Today.AddDays(-6).ToString("yyyy-MM-dd");
+    var returnUrl = Context.Request.Path + Context.Request.QueryString;
+    var hasFilter = Model.FromDate.HasValue || Model.ToDate.HasValue || Model.PlantId.HasValue || Model.WorkerId.HasValue || !string.IsNullOrWhiteSpace(Model.Kind) || Model.MaterialItemId.HasValue;
+}
+<div class="page-header">
+    <div>
+        <p class="eyebrow">NHẬT KÝ CÔNG VIỆC NÔNG TRẠI</p>
+        <h1>Việc hằng ngày</h1>
+        <p class="page-description">Ghi nhanh công việc theo ngày, chọn vật liệu từ danh mục và gán cho 1 hoặc nhiều công nhân thực hiện.</p>
+    </div>
+    <a asp-action="Create" asp-route-returnUrl="@returnUrl" class="btn btn-farm">+ Ghi việc mới</a>
+</div>
+
+<section class="card mb-4">
+    <div class="card-body">
+        <form method="get" asp-action="Index" class="work-filter-bar">
+            <div class="row g-3 align-items-end">
+                <div class="col-md-2 col-sm-6">
+                    <label class="form-label" for="fromDate">Từ ngày</label>
+                    <input type="date" id="fromDate" name="fromDate" value="@(Model.FromDate?.ToString("yyyy-MM-dd"))" class="form-control" />
+                </div>
+                <div class="col-md-2 col-sm-6">
+                    <label class="form-label" for="toDate">Đến ngày</label>
+                    <input type="date" id="toDate" name="toDate" value="@(Model.ToDate?.ToString("yyyy-MM-dd"))" class="form-control" />
+                </div>
+                <div class="col-md-2 col-sm-6">
+                    <label class="form-label" for="plantId">Mùa vụ</label>
+                    <select id="plantId" name="plantId" class="form-select">
+                        <option value="">Tất cả mùa vụ</option>
+                        @foreach (var p in Model.Plants)
+                        {
+                            <option value="@p.Id" selected="@(Model.PlantId == p.Id)">@(p.SeasonName ?? p.BatchCode ?? $"Mùa vụ #{p.Id}")</option>
+                        }
+                    </select>
+                </div>
+                <div class="col-md-2 col-sm-6">
+                    <label class="form-label" for="workerId">Công nhân</label>
+                    <select id="workerId" name="workerId" class="form-select">
+                        <option value="">Tất cả công nhân</option>
+                        @foreach (var w in Model.Workers)
+                        {
+                            <option value="@w.Id" selected="@(Model.WorkerId == w.Id)">@(w.FullName ?? w.Code ?? $"CN #{w.Id}")</option>
+                        }
+                    </select>
+                </div>
+                <div class="col-md-2 col-sm-6">
+                    <label class="form-label" for="kind">Loại việc</label>
+                    <select id="kind" name="kind" class="form-select">
+                        <option value="">Tất cả công việc</option>
+                        @foreach (var k in CropSeasonRules.Kinds)
+                        {
+                            <option value="@k.Key" selected="@(Model.Kind == k.Key)">@k.Value</option>
+                        }
+                    </select>
+                </div>
+                <div class="col-md-2 col-sm-6">
+                    <label class="form-label" for="materialItemId">Vật liệu</label>
+                    <select id="materialItemId" name="materialItemId" class="form-select">
+                        <option value="">Tất cả vật liệu</option>
+                        @foreach (var m in Model.Materials)
+                        {
+                            <option value="@m.Id" selected="@(Model.MaterialItemId == m.Id)">@m.Name</option>
+                        }
+                    </select>
+                </div>
+            </div>
+            <div class="crop-actions mt-3">
+                <button type="submit" class="btn btn-farm btn-sm">Lọc công việc</button>
+                <a asp-action="Index" asp-route-fromDate="@today" asp-route-toDate="@today" class="btn btn-outline-farm btn-sm">Hôm nay</a>
+                <a asp-action="Index" asp-route-fromDate="@sevenDaysAgo" asp-route-toDate="@today" class="btn btn-outline-farm btn-sm">7 ngày gần đây</a>
+                @if (hasFilter)
+                {
+                    <a asp-action="Index" class="btn btn-outline-secondary btn-sm">Xóa bộ lọc</a>
+                }
+                <span class="ms-auto text-muted small">Tìm thấy @Model.Items.Count công việc</span>
+            </div>
+        </form>
+    </div>
+</section>
+
+<section class="card" data-list data-page-size="20">
+    @if (!Model.Items.Any())
+    {
+        <div class="empty-state">
+            <svg class="icon empty-icon"><use href="#i-clock" /></svg>
+            <h3>@(hasFilter ? "Không có công việc khớp bộ lọc" : "Chưa có công việc nào được ghi")</h3>
+            <p>Bấm “Ghi việc mới” để chọn mùa vụ, vật liệu và gán công nhân làm việc trong ngày.</p>
+            <a asp-action="Create" asp-route-returnUrl="@returnUrl" class="btn btn-farm">+ Ghi việc mới</a>
+        </div>
+    }
+    else
+    {
+        <div class="table-responsive">
+            <table class="table table-responsive-card">
+                <thead>
+                    <tr>
+                        <th>Ngày</th>
+                        <th>Mùa vụ / vùng</th>
+                        <th>Công việc</th>
+                        <th>Vật liệu & lượng</th>
+                        <th>Công nhân thực hiện</th>
+                        <th>Ghi chú</th>
+                        <th></th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var row in Model.Items)
+                    {
+                        var e = row.Entry;
+                        var amountText = e.Amount.HasValue
+                            ? e.Amount.Value.ToString("0.##", vi) + (string.IsNullOrWhiteSpace(e.Unit) ? "" : " " + e.Unit)
+                            : null;
+                        <tr data-list-row>
+                            <td data-label="Ngày"><strong>@(e.Date?.ToString("dd/MM/yyyy") ?? "Chưa rõ")</strong></td>
+                            <td data-label="Mùa vụ">
+                                @if (e.PlantId.HasValue)
+                                {
+                                    <a asp-controller="Plants" asp-action="Details" asp-route-id="@e.PlantId" class="fw-bold">@(row.PlantName ?? $"Mùa vụ #{e.PlantId}")</a>
+                                }
+                                else
+                                {
+                                    <span>Chưa gắn mùa vụ</span>
+                                }
+                                @if (!string.IsNullOrWhiteSpace(row.AreaName))
+                                {
+                                    <small class="d-block text-muted">@row.AreaName</small>
+                                }
+                            </td>
+                            <td data-label="Công việc">
+                                <span class="badge @(e.Kind == "Pesticide" ? "bg-warning" : e.Kind == "Fertilize" ? "bg-success" : e.Kind == "Harvest" ? "bg-info" : "bg-secondary")">@CropSeasonRules.KindLabel(e.Kind)</span>
+                                @if (e.WithdrawalDays.HasValue)
+                                {
+                                    <small class="d-block text-muted">Cách ly: @e.WithdrawalDays ngày</small>
+                                }
+                            </td>
+                            <td data-label="Vật liệu">
+                                @if (!string.IsNullOrWhiteSpace(row.MaterialDisplay))
+                                {
+                                    <strong>@row.MaterialDisplay</strong>
+                                }
+                                else
+                                {
+                                    <span class="text-muted">—</span>
+                                }
+                                @if (!string.IsNullOrWhiteSpace(amountText))
+                                {
+                                    <small class="d-block">@amountText</small>
+                                }
+                                @if (!string.IsNullOrWhiteSpace(e.Quality))
+                                {
+                                    <small class="d-block text-muted">@e.Quality</small>
+                                }
+                            </td>
+                            <td data-label="Công nhân">
+                                @if (row.WorkerNames.Any())
+                                {
+                                    <div class="worker-badge-list">
+                                        @foreach (var name in row.WorkerNames)
+                                        {
+                                            <span class="worker-badge">@name</span>
+                                        }
+                                    </div>
+                                }
+                                else
+                                {
+                                    <span class="text-muted">Chưa gán công nhân</span>
+                                }
+                            </td>
+                            <td data-label="Ghi chú">
+                                @if (!string.IsNullOrWhiteSpace(e.Summary))
+                                {
+                                    <span class="preserve-lines">@e.Summary</span>
+                                }
+                                else
+                                {
+                                    <span class="text-muted">—</span>
+                                }
+                            </td>
+                            <td class="text-end">
+                                <a asp-action="Edit" asp-route-id="@e.Id" asp-route-returnUrl="@returnUrl" class="btn btn-sm btn-outline-farm">Sửa</a>
+                                <a asp-action="Delete" asp-route-id="@e.Id" asp-route-returnUrl="@returnUrl" class="btn btn-sm btn-outline-danger">Xóa</a>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+        <div class="list-footer">
+            <span data-list-count></span>
+            <div class="list-pagination">
+                <button type="button" class="btn btn-sm btn-outline-secondary" data-list-prev>← Trước</button>
+                <span data-list-page></span>
+                <button type="button" class="btn btn-sm btn-outline-secondary" data-list-next>Sau →</button>
+            </div>
+        </div>
+    }
+</section>

@@ -1,0 +1,73 @@
+@model Farm_Management.Models.ViewModels.MaterialItemForm
+@using Farm_Management.Services
+@{
+    ViewData["Title"] = Model.Id == 0 ? "Thêm vật liệu" : "Sửa vật liệu";
+}
+<div class="page-header">
+    <div>
+        <p class="eyebrow">DANH MỤC VẬT LIỆU</p>
+        <h1>@ViewData["Title"]</h1>
+        <p class="page-description">Chỉ cần nhập tên và nhóm vật liệu. Đơn vị và ghi chú có thể bỏ trống.</p>
+    </div>
+    <a asp-action="Index" class="btn btn-outline-secondary">← Danh mục vật liệu</a>
+</div>
+
+<form asp-action="@(Model.Id == 0 ? "Create" : "Edit")" asp-route-id="@(Model.Id == 0 ? (int?)null : Model.Id)" method="post" class="card form-container-center" data-save-form>
+    <input asp-for="Id" type="hidden" />
+    <div class="form-section">
+        <div asp-validation-summary="ModelOnly"></div>
+        <div class="mb-3">
+            <label asp-for="Name" class="form-label"></label>
+            <input asp-for="Name" class="form-control" placeholder="Ví dụ: Phân gà, Phân bò, Thuốc trừ sâu Nhật" />
+            <span asp-validation-for="Name"></span>
+        </div>
+        <div class="row g-3 mb-3">
+            <div class="col-md-6">
+                <label asp-for="Category" class="form-label"></label>
+                <select asp-for="Category" class="form-select">
+                    @foreach (var cat in MaterialRules.Categories)
+                    {
+                        <option value="@cat.Key">@cat.Value</option>
+                    }
+                </select>
+                <span asp-validation-for="Category"></span>
+            </div>
+            <div class="col-md-6">
+                <label asp-for="DefaultUnit" class="form-label"></label>
+                <input asp-for="DefaultUnit" list="material-unit-suggestions" class="form-control" placeholder="Ví dụ: kg, bao, chai, ml, lít" />
+                <datalist id="material-unit-suggestions">
+                    @foreach (var u in MaterialRules.SuggestedUnits)
+                    {
+                        <option value="@u"></option>
+                    }
+                </datalist>
+                <span asp-validation-for="DefaultUnit"></span>
+            </div>
+        </div>
+        <div class="mb-3">
+            <label asp-for="Notes" class="form-label"></label>
+            <textarea asp-for="Notes" class="form-control" rows="3" placeholder="Ví dụ: Bón lót đầu vụ hoặc pha 20ml/bình 16 lít"></textarea>
+            <span asp-validation-for="Notes"></span>
+        </div>
+        @if (Model.Id > 0)
+        {
+            <div class="form-check">
+                <input asp-for="IsActive" class="form-check-input" />
+                <label asp-for="IsActive" class="form-check-label">Đang sử dụng (bỏ chọn nếu tạm ngừng dùng)</label>
+            </div>
+        }
+        else
+        {
+            <input asp-for="IsActive" type="hidden" value="true" />
+        }
+    </div>
+    <partial name="_RecordChange" />
+    <div class="form-actions">
+        <a asp-action="Index" class="btn btn-outline-secondary">Hủy</a>
+        <button type="submit" class="btn btn-farm">Lưu vật liệu</button>
+    </div>
+</form>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

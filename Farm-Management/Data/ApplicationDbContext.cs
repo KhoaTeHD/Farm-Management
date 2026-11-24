@@ -37,11 +37,20 @@ namespace Farm_Management.Data
         public DbSet<InspectionReport> InspectionReports { get; set; }
         public DbSet<HarvestTrace> HarvestTraces { get; set; }
         public DbSet<UserAccount> UserAccounts { get; set; }
+        public DbSet<MaterialItem> MaterialItems { get; set; }
+        public DbSet<CropJournalWorker> CropJournalWorkers { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             base.OnModelCreating(modelBuilder);
             modelBuilder.Entity<UserAccount>().HasIndex(e => e.NormalizedUsername);
+            modelBuilder.Entity<MaterialItem>().HasQueryFilter(e => e.IsDeleted != true);
+            modelBuilder.Entity<MaterialItem>().HasIndex(e => e.Name);
+            modelBuilder.Entity<MaterialItem>().HasIndex(e => e.Category);
+            modelBuilder.Entity<CropJournalEntry>().HasIndex(e => e.MaterialItemId);
+            modelBuilder.Entity<CropJournalWorker>().HasIndex(e => e.CropJournalEntryId);
+            modelBuilder.Entity<CropJournalWorker>().HasIndex(e => e.WorkerId);
+            modelBuilder.Entity<CropJournalWorker>().HasIndex(e => new { e.CropJournalEntryId, e.WorkerId });
             modelBuilder.Entity<Plant>().HasQueryFilter(e => e.IsDeleted != true);
             modelBuilder.Entity<Area>().HasQueryFilter(e => e.IsDeleted != true);
             modelBuilder.Entity<PlantType>().HasQueryFilter(e => e.IsDeleted != true);

@@ -1,4 +1,90 @@
 @model Farm_Management.Models.Worker
-@{ ViewData["Title"] = "Hồ sơ công nhân"; }
-<div class="page-header"><div><p class="eyebrow">ĐỘI NGŨ TRANG TRẠI</p><h1>@(Model.FullName ?? "Hồ sơ công nhân")</h1><p class="page-description">@(Model.Code ?? "Chưa có mã công nhân") · @ViewBag.AttendanceCount bản ghi chấm công</p></div><div class="d-flex gap-2"><a asp-action="Index" class="btn btn-outline-secondary">← Danh sách</a><a asp-action="Edit" asp-route-id="@Model.Id" class="btn btn-farm"><svg class="icon"><use href="#i-edit" /></svg>Sửa hồ sơ</a></div></div>
-<div class="card"><div class="card-header">Thông tin công nhân</div><div class="card-body"><dl class="definition-grid"><div><dt>Họ và tên</dt><dd>@(Model.FullName ?? "Chưa cập nhật")</dd></div><div><dt>Mã công nhân</dt><dd>@(Model.Code ?? "Chưa cập nhật")</dd></div><div><dt>Số điện thoại</dt><dd>@(Model.Phone ?? "Chưa cập nhật")</dd></div><div><dt>Ngày vào làm</dt><dd>@(Model.HireDate?.ToString("dd/MM/yyyy") ?? "Chưa cập nhật")</dd></div><div><dt>Lương ngày (8 giờ)</dt><dd>@(Model.DailySalary?.ToString("N0", System.Globalization.CultureInfo.GetCultureInfo("vi-VN")) ?? "Chưa cập nhật") đ</dd></div><div><dt>Trạng thái</dt><dd><span class="badge @(Model.IsActive == true ? "bg-success" : "bg-secondary")">@(Model.IsActive == true ? "Đang làm việc" : Model.IsActive == false ? "Đã nghỉ việc" : "Chưa có trạng thái")</span></dd></div><div><dt>Ngày tạo hồ sơ</dt><dd>@(Model.CreatedAt?.ToString("dd/MM/yyyy HH:mm") ?? "Chưa cập nhật")</dd></div></dl></div></div>
+@using Farm_Management.Models.ViewModels
+@using Farm_Management.Services
+@{
+    ViewData["Title"] = "Hồ sơ công nhân";
+    var workCount = ViewBag.WorkCount as int? ?? 0;
+    var recentWorks = ViewBag.RecentWorks as List<DailyWorkRow> ?? new List<DailyWorkRow>();
+    var vi = System.Globalization.CultureInfo.GetCultureInfo("vi-VN");
+}
+<div class="page-header">
+    <div>
+        <p class="eyebrow">ĐỘI NGŨ TRANG TRẠI</p>
+        <h1>@(Model.FullName ?? "Hồ sơ công nhân")</h1>
+        <p class="page-description">@(Model.Code ?? "Chưa có mã công nhân") · @ViewBag.AttendanceCount bản ghi chấm công · @workCount công việc được gán</p>
+    </div>
+    <div class="d-flex gap-2">
+        <a asp-action="Index" class="btn btn-outline-secondary">← Danh sách</a>
+        <a asp-action="Edit" asp-route-id="@Model.Id" class="btn btn-farm"><svg class="icon"><use href="#i-edit" /></svg>Sửa hồ sơ</a>
+    </div>
+</div>
+<div class="card mb-4">
+    <div class="card-header">Thông tin công nhân</div>
+    <div class="card-body">
+        <dl class="definition-grid">
+            <div><dt>Họ và tên</dt><dd>@(Model.FullName ?? "Chưa cập nhật")</dd></div>
+            <div><dt>Mã công nhân</dt><dd>@(Model.Code ?? "Chưa cập nhật")</dd></div>
+            <div><dt>Số điện thoại</dt><dd>@(Model.Phone ?? "Chưa cập nhật")</dd></div>
+            <div><dt>Ngày vào làm</dt><dd>@(Model.HireDate?.ToString("dd/MM/yyyy") ?? "Chưa cập nhật")</dd></div>
+            <div><dt>Lương ngày (8 giờ)</dt><dd>@(Model.DailySalary?.ToString("N0", vi) ?? "Chưa cập nhật") đ</dd></div>
+            <div>
+                <dt>Trạng thái</dt>
+                <dd>
+                    <span class="badge @(Model.IsActive == true ? "bg-success" : "bg-secondary")">
+                        @(Model.IsActive == true ? "Đang làm việc" : Model.IsActive == false ? "Đã nghỉ việc" : "Chưa có trạng thái")
+                    </span>
+                </dd>
+            </div>
+            <div><dt>Ngày tạo hồ sơ</dt><dd>@(Model.CreatedAt?.ToString("dd/MM/yyyy HH:mm") ?? "Chưa cập nhật")</dd></div>
+        </dl>
+    </div>
+</div>
+
+<div class="card">
+    <div class="card-header d-flex flex-wrap justify-content-between align-items-center gap-2">
+        <h2 class="mb-0">Công việc đã tham gia (@workCount)</h2>
+        <a asp-controller="CropJournal" asp-action="Index" asp-route-workerId="@Model.Id" class="btn btn-sm btn-outline-farm">Xem tất cả việc của công nhân →</a>
+    </div>
+    @if (!recentWorks.Any())
+    {
+        <div class="card-body"><p class="mb-0 text-muted">Công nhân này chưa được gán vào việc hằng ngày nào.</p></div>
+    }
+    else
+    {
+        <div class="table-responsive">
+            <table class="table table-responsive-card">
+                <thead>
+                    <tr>
+                        <th>Ngày</th>
+                        <th>Mùa vụ</th>
+                        <th>Công việc</th>
+                        <th>Vật liệu</th>
+                        <th>Ghi chú</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var row in recentWorks)
+                    {
+                        var e = row.Entry;
+                        <tr>
+                            <td data-label="Ngày">@(e.Date?.ToString("dd/MM/yyyy") ?? "Chưa rõ")</td>
+                            <td data-label="Mùa vụ">
+                                @if (e.PlantId.HasValue)
+                                {
+                                    <a asp-controller="Plants" asp-action="Details" asp-route-id="@e.PlantId">@(row.PlantName ?? $"Mùa vụ #{e.PlantId}")</a>
+                                }
+                                else
+                                {
+                                    <span>—</span>
+                                }
+                            </td>
+                            <td data-label="Công việc">@CropSeasonRules.KindLabel(e.Kind)</td>
+                            <td data-label="Vật liệu">@(string.IsNullOrWhiteSpace(row.MaterialDisplay) ? "—" : row.MaterialDisplay)</td>
+                            <td data-label="Ghi chú">@(string.IsNullOrWhiteSpace(e.Summary) ? "—" : e.Summary)</td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    }
+</div>

@@ -36,6 +36,29 @@ namespace Farm_Management.Controllers
             var worker = id.HasValue ? await _context.Workers.AsNoTracking().FirstOrDefaultAsync(w => w.Id == id) : null;
             if (worker == null) return NotFound();
             ViewBag.AttendanceCount = await _context.AttendanceLogs.CountAsync(a => a.WorkerId == worker.Id);
+            var workerEntryIds = await _context.CropJournalWorkers.AsNoTracking()
+                .Where(w => w.WorkerId == worker.Id && w.CropJournalEntryId.HasValue)
+                .Select(w => w.CropJournalEntryId!.Value)
+                .Distinct()
+                .ToListAsync();
+            var recentEntries = workerEntryIds.Count == 0
+                ? new List<CropJournalEntry>()
+                : await _context.CropJournalEntries.AsNoTracking()
+                    .Where(e => workerEntryIds.Contains(e.Id))
+                    .OrderByDescending(e => e.Date)
+                    .ThenByDescending(e => e.Id)
+                    .ToListAsync();
+            ViewBag.WorkCount = recentEntries.Count;
+            var plantIds = recentEntries.Take(10).Where(e => e.PlantId.HasValue).Select(e => e.PlantId!.Value).Distinct().ToList();
+            var plants = plantIds.Count == 0
+                ? new Dictionary<int, Plant>()
+                : await _context.Plants.AsNoTracking().Where(p => plantIds.Contains(p.Id)).ToDictionaryAsync(p => p.Id);
+            ViewBag.RecentWorks = recentEntries.Take(10).Select(e => new DailyWorkRow
+            {
+                Entry = e,
+                PlantName = e.PlantId.HasValue && plants.TryGetValue(e.PlantId.Value, out var p) ? (p.SeasonName ?? p.BatchCode) : null,
+                MaterialDisplay = e.Material
+            }).ToList();
             return View(worker);
         }
 
@@ -177,7 +200,8 @@ namespace Farm_Management.Controllers
                 var hasAttendance = await _context.AttendanceLogs.AnyAsync(a => a.WorkerId == id);
                 var hasPayroll = await _context.PayrollEntries.AnyAsync(e => e.WorkerId == id);
                 var hasAdvances = await _context.WorkerAdvances.AnyAsync(a => a.WorkerId == id);
-                if (hasAdvances || hasPesticideLogs || hasFertilizerLogs || hasWaterLogs || hasHarvestLogs || hasAttendance || hasPayroll)
+                var hasJournalWork = await _context.CropJournalWorkers.AnyAsync(w => w.WorkerId == id);
+                if (hasAdvances || hasPesticideLogs || hasFertilizerLogs || hasWaterLogs || hasHarvestLogs || hasAttendance || hasPayroll || hasJournalWork)
                 {
                     TempData["Error"] = $"Không thể xóa công nhân {worker.FullName} vì đã có lịch sử làm việc. " +
                                        "Bạn có thể đặt trạng thái 'Nghỉ việc' thay vì xóa để lưu trữ dữ liệu.";

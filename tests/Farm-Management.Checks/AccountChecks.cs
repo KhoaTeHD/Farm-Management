@@ -123,9 +123,11 @@ internal static class AccountChecks
     {
         var root = new DirectoryInfo(AppContext.BaseDirectory);
         while (root != null && !File.Exists(Path.Combine(root.FullName, "Farm-Management.sln"))) root = root.Parent;
-        var configuration = new DirectoryInfo(AppContext.BaseDirectory).Parent!.Name;
+        var configuration = new DirectoryInfo(AppContext.BaseDirectory.TrimEnd(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar)).Parent!.Name;
         var start = new ProcessStartInfo("dotnet") { WorkingDirectory = Path.Combine(root!.FullName, "Farm-Management"), UseShellExecute = false, CreateNoWindow = true, RedirectStandardOutput = true, RedirectStandardError = true };
-        start.ArgumentList.Add(Path.Combine(start.WorkingDirectory, "bin", configuration, "net8.0", "Farm-Management.dll")); start.ArgumentList.Add(command);
+        var appDll = Path.Combine(start.WorkingDirectory, "bin", configuration, "net8.0", "Farm-Management.dll");
+        if (!File.Exists(appDll)) appDll = Path.Combine(start.WorkingDirectory, "bin", "Debug", "net8.0", "Farm-Management.dll");
+        start.ArgumentList.Add(appDll); start.ArgumentList.Add(command);
         start.Environment["ConnectionStrings__DefaultConnection"] = connection;
         start.Environment["FARM_ADMIN_USERNAME"] = AdminName;
         if (password != null) start.Environment["FARM_ADMIN_PASSWORD"] = password;

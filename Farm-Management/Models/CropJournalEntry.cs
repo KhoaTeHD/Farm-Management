@@ -11,6 +11,7 @@ public class CropJournalEntry : ICultivationRecord
         public DateTime? DeletedAt { get; set; }
     public int? PlantId { get; set; }
     public int? InputLotId { get; set; }
+    public int? MaterialItemId { get; set; }
     public int? WaterResourceId { get; set; }
     public int? CareStepId { get; set; }
     [StringLength(40)] public string? RecordCode { get; set; }
@@ -20,7 +21,7 @@ public class CropJournalEntry : ICultivationRecord
     [StringLength(2000)] public string? Summary { get; set; }
     [StringLength(200)] public string? Material { get; set; }
     public decimal? Amount { get; set; }
-    [StringLength(10)] public string? Unit { get; set; }
+    [StringLength(20)] public string? Unit { get; set; }
     [StringLength(200)] public string? Method { get; set; }
     [StringLength(200)] public string? Weather { get; set; }
     public int? WithdrawalDays { get; set; }

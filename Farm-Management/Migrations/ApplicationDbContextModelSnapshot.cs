@@ -205,6 +205,9 @@ namespace Farm_Management.Migrations
                         .HasMaxLength(200)
                         .HasColumnType("nvarchar(200)");
 
+                    b.Property<int?>("MaterialItemId")
+                        .HasColumnType("int");
+
                     b.Property<string>("Method")
                         .HasMaxLength(200)
                         .HasColumnType("nvarchar(200)");
@@ -240,8 +243,8 @@ namespace Farm_Management.Migrations
                         .HasColumnType("decimal(5,2)");
 
                     b.Property<string>("Unit")
-                        .HasMaxLength(10)
-                        .HasColumnType("nvarchar(10)");
+                        .HasMaxLength(20)
+                        .HasColumnType("nvarchar(20)");
 
                     b.Property<DateTime?>("UpdatedAt")
                         .HasColumnType("datetime2");
@@ -262,6 +265,8 @@ namespace Farm_Management.Migrations
 
                     b.HasIndex("InputLotId");
 
+                    b.HasIndex("MaterialItemId");
+
                     b.HasIndex("RecordCode");
 
                     b.HasIndex("WaterResourceId");
@@ -269,6 +274,35 @@ namespace Farm_Management.Migrations
                     b.HasIndex("PlantId", "Date");
 
                     b.ToTable("CropJournalEntries");
+                });
+
+            modelBuilder.Entity("Farm_Management.Models.CropJournalWorker", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<int?>("CropJournalEntryId")
+                        .HasColumnType("int");
+
+                    b.Property<int?>("WorkerId")
+                        .HasColumnType("int");
+
+                    b.Property<string>("WorkerName")
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("CropJournalEntryId");
+
+                    b.HasIndex("WorkerId");
+
+                    b.HasIndex("CropJournalEntryId", "WorkerId");
+
+                    b.ToTable("CropJournalWorkers");
                 });
 
             modelBuilder.Entity("Farm_Management.Models.CultivationAudit", b =>
@@ -708,6 +742,54 @@ namespace Farm_Management.Migrations
                     b.HasIndex("TargetType", "TargetId");
 
                     b.ToTable("InspectionReports");
+                });
+
+            modelBuilder.Entity("Farm_Management.Models.MaterialItem", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("Category")
+                        .HasMaxLength(30)
+                        .HasColumnType("nvarchar(30)");
+
+                    b.Property<DateTime?>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("DefaultUnit")
+                        .HasMaxLength(20)
+                        .HasColumnType("nvarchar(20)");
+
+                    b.Property<DateTime?>("DeletedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<bool?>("IsActive")
+                        .HasColumnType("bit");
+
+                    b.Property<bool?>("IsDeleted")
+                        .HasColumnType("bit");
+
+                    b.Property<string>("Name")
+                        .HasMaxLength(200)
+                        .HasColumnType("nvarchar(200)");
+
+                    b.Property<string>("Notes")
+                        .HasMaxLength(1000)
+                        .HasColumnType("nvarchar(1000)");
+
+                    b.Property<int?>("Revision")
+                        .HasColumnType("int");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("Category");
+
+                    b.HasIndex("Name");
+
+                    b.ToTable("MaterialItems");
                 });
 
             modelBuilder.Entity("Farm_Management.Models.PayrollEntry", b =>

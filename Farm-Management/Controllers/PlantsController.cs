@@ -44,7 +44,6 @@ public class PlantsController(ApplicationDbContext db, CropSeasonService seasons
         var seed = form.SeedId.HasValue ? await db.Seeds.FindAsync(form.SeedId.Value) : null;
         if (!await db.Areas.AnyAsync(a => a.Id == form.AreaId)) ModelState.AddModelError(nameof(form.AreaId), "Vùng trồng không tồn tại.");
         if (type == null) ModelState.AddModelError(nameof(form.PlantTypeId), "Loại cây không tồn tại.");
-        if(seed?.InputLotId!=null){var seedLot=await db.InputLots.FindAsync(seed.InputLotId.Value);if(seedLot==null || !FarmRecordRules.InputComplete(seedLot) || seedLot.Kind!="Seed" || seedLot.Status!="Released" || !await FarmRecordRules.TestsAllowAsync(db,"InputLot",seedLot.Id) || seedLot.ReceivedDate==null || form.PlantingDate<seedLot.ReceivedDate || (seedLot.ExpiryDate.HasValue && form.PlantingDate>seedLot.ExpiryDate))ModelState.AddModelError(nameof(form.SeedId),"Lô giống đầu vào chưa được cho dùng hoặc không phù hợp ngày trồng.");}
         if (seed == null || seed.PlantTypeId != form.PlantTypeId) ModelState.AddModelError(nameof(form.SeedId), "Giống không tồn tại hoặc không thuộc loại cây đã chọn.");
         if (await db.Plants.IgnoreQueryFilters().AnyAsync(p => p.Id != form.Id && p.BatchCode == form.BatchCode)) ModelState.AddModelError(nameof(form.BatchCode), "Mã lô đã tồn tại.");
         var safety = await seasons.SafetyAsync(create ? 0 : form.Id);
@@ -64,7 +63,7 @@ public class PlantsController(ApplicationDbContext db, CropSeasonService seasons
             source = await db.Plants.FindAsync(form.SourcePlantId.Value);
             if (source == null || source.PlantTypeId != form.PlantTypeId) ModelState.AddModelError(nameof(form.SourcePlantId), "Chọn mùa vụ cùng loại cây để lấy kế hoạch.");
         }
-        if ((form.Status == "Harvested" || form.Status == "ReadyToHarvest") && (safety.Incomplete || safeDate > DateTime.Today)) ModelState.AddModelError(nameof(form.Status), "Chưa thể đánh dấu sẵn sàng hoặc đã thu hoạch: nhật ký thuốc chưa đủ dữ liệu hoặc chưa hết thời gian cách ly đã ghi nhận.");
+        if ((form.Status == "Harvested" || form.Status == "ReadyToHarvest") && (safety.Incomplete || (safeDate.HasValue && safeDate.Value > DateTime.Today))) ModelState.AddModelError(nameof(form.Status), "Chưa thể đánh dấu sẵn sàng hoặc đã thu hoạch: nhật ký thuốc chưa đủ dữ liệu hoặc chưa hết thời gian cách ly đã ghi nhận.");
         if (form.ExpectedHarvestDate == null && type?.GrowthCycleDays != null && form.PlantingDate.HasValue)
         {
             form.ExpectedHarvestDate = CropRules.Expected(form.PlantingDate, type.GrowthCycleDays);

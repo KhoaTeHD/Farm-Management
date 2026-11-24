@@ -31,10 +31,10 @@ public class SeedsController(ApplicationDbContext db) : Controller
         if (!await db.PlantTypes.AnyAsync(t => t.Id == form.PlantTypeId)) ModelState.AddModelError(nameof(form.PlantTypeId), "Loại cây không tồn tại.");
         if (await db.Seeds.IgnoreQueryFilters().AnyAsync(s => s.Id != form.Id && s.PlantTypeId == form.PlantTypeId && s.Name == form.Name)) ModelState.AddModelError(nameof(form.Name), "Giống này đã tồn tại trong loại cây.");
         if (!create && await db.Plants.IgnoreQueryFilters().AnyAsync(p => p.SeedId == form.Id && p.PlantTypeId != form.PlantTypeId)) ModelState.AddModelError(nameof(form.PlantTypeId), "Giống đang dùng cho lô cây thuộc loại khác. Điều chỉnh lô cây trước khi đổi loại.");
-        if(form.InputLotId.HasValue && !await db.InputLots.AnyAsync(l=>l.Id==form.InputLotId && l.Kind=="Seed")) ModelState.AddModelError(nameof(form.InputLotId),"Lô giống đầu vào không tồn tại.");
         if (!ModelState.IsValid) { await Options(form); return View("Form", form); }
         var item = create ? new Seed() : await db.Seeds.FindAsync(form.Id); if (item == null) return NotFound();
-        item.InputLotId = form.InputLotId; item.Name = form.Name; item.PlantTypeId = form.PlantTypeId; item.Origin = form.Origin; item.BatchNumber = form.BatchNumber; item.InvoiceNumber = form.InvoiceNumber; item.IsCertified = form.IsCertified; item.Notes = form.Notes;
+        if (create) item.InputLotId = form.InputLotId;
+        item.Name = form.Name; item.PlantTypeId = form.PlantTypeId; item.Origin = form.Origin; item.BatchNumber = form.BatchNumber; item.InvoiceNumber = form.InvoiceNumber; item.IsCertified = form.IsCertified; item.Notes = form.Notes;
         if (create) db.Seeds.Add(item); await db.SaveChangesAsync(); await tx.CommitAsync(); TempData["Success"] = "Đã lưu giống cây."; return RedirectToAction(nameof(Index));
     }
     public async Task<IActionResult> Delete(int id) { var s = await db.Seeds.FindAsync(id); return s == null ? NotFound() : View(s); }

@@ -8,15 +8,19 @@ namespace Farm_Management.Services;
 
 public static class MaterialUsageService
 {
-    public static List<MaterialUsageRow> FromJournal(IEnumerable<CropJournalEntry> entries) => entries
-        .Where(e => e.IsDeleted != true && e.Kind is "Pesticide" or "Fertilize")
+    public static List<MaterialUsageRow> FromJournal(IEnumerable<CropJournalEntry> entries, IReadOnlyDictionary<int, List<string>>? entryWorkers = null) => entries
+        .Where(e => e.IsDeleted != true && (e.Kind is "Pesticide" or "Fertilize" || (e.Kind == "Care" && (e.MaterialItemId.HasValue || !string.IsNullOrWhiteSpace(e.Material)))))
         .Select(e => new MaterialUsageRow
         {
             Kind = e.Kind,
             ProductName = e.Material,
             Date = e.Date,
-            PerformedBy = e.Recorder,
-            QuantityText = e.Amount.HasValue ? e.Amount.Value.ToString("0.##", CultureInfo.GetCultureInfo("vi-VN")) + " " + (string.IsNullOrWhiteSpace(e.Unit) ? "(chưa ghi đơn vị)" : e.Unit) : null,
+            PerformedBy = entryWorkers != null && entryWorkers.TryGetValue(e.Id, out var names) && names.Count > 0
+                ? string.Join(", ", names)
+                : e.Recorder,
+            QuantityText = e.Amount.HasValue
+                ? e.Amount.Value.ToString("0.##", CultureInfo.GetCultureInfo("vi-VN")) + (string.IsNullOrWhiteSpace(e.Unit) ? "" : " " + e.Unit)
+                : null,
             WithdrawalDays = e.WithdrawalDays,
             JournalEntryId = e.Id
         }).ToList();

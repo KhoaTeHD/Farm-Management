@@ -11,18 +11,20 @@ public class CropSeasonViewModel
     public List<CropCareStep> Steps { get; set; } = new();
     public List<CropTimelineItem> Timeline { get; set; } = new();
     public List<MaterialUsageRow> MaterialUses { get; set; } = new();
+    public Dictionary<int, List<string>> EntryWorkers { get; set; } = new();
     public DateTime? SafeDate { get; set; }
     public bool SafetyIncomplete { get; set; }
     public int IncompleteEntries { get; set; }
     public int LegacyHarvestCount { get; set; }
     public decimal? HarvestKg { get; set; }
     public bool HarvestIncomplete { get; set; }
-    public CropJournalEntry? LatestObservation => Entries.Where(e => e.Kind == "Observation" && CropSeasonRules.Complete(e, Plant)).OrderByDescending(e => e.Date).ThenByDescending(e => e.Id).FirstOrDefault();
+    public bool HasWorkers(int entryId) => EntryWorkers.TryGetValue(entryId, out var workers) && workers.Count > 0;
+    public CropJournalEntry? LatestObservation => Entries.Where(e => e.Kind == "Observation" && CropSeasonRules.Complete(e, Plant, HasWorkers(e.Id))).OrderByDescending(e => e.Date).ThenByDescending(e => e.Id).FirstOrDefault();
     public bool PlanComplete(CropCareStep step) => CropSeasonRules.PlanDate(Plant.PlantingDate, step.PlannedDay).HasValue && CropSeasonRules.Kinds.ContainsKey(step.Kind ?? "") && !string.IsNullOrWhiteSpace(step.Title) && !string.IsNullOrWhiteSpace(step.Instructions);
     public int IncompleteSteps => Steps.Count(s => !PlanComplete(s));
-    public bool StepDone(CropCareStep step) => PlanComplete(step) && Entries.Any(e => e.CareStepId == step.Id && e.PlantId == step.PlantId && e.Kind == step.Kind && CropSeasonRules.Complete(e, Plant));
+    public bool StepDone(CropCareStep step) => PlanComplete(step) && Entries.Any(e => e.CareStepId == step.Id && e.PlantId == step.PlantId && e.Kind == step.Kind && CropSeasonRules.Complete(e, Plant, HasWorkers(e.Id)));
     public int DoneSteps => Steps.Count(StepDone);
-    public CropJournalEntry? FirstActual(CropCareStep step) => Entries.Where(e => e.CareStepId == step.Id && e.PlantId == step.PlantId && e.Kind == step.Kind && CropSeasonRules.Complete(e, Plant)).OrderBy(e => e.Date).ThenBy(e => e.Id).FirstOrDefault();
+    public CropJournalEntry? FirstActual(CropCareStep step) => Entries.Where(e => e.CareStepId == step.Id && e.PlantId == step.PlantId && e.Kind == step.Kind && CropSeasonRules.Complete(e, Plant, HasWorkers(e.Id))).OrderBy(e => e.Date).ThenBy(e => e.Id).FirstOrDefault();
     public int DueSteps => Steps.Count(s => !StepDone(s) && CropSeasonRules.PlanDate(Plant.PlantingDate, s.PlannedDay) <= DateTime.Today);
 }
 

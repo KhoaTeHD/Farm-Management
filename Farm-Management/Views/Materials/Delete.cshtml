@@ -1,0 +1,17 @@
+@model Farm_Management.Models.MaterialItem
+@using Farm_Management.Services
+@{
+    ViewData["Title"] = "Xóa vật liệu?";
+}
+<partial name="_DeletePanel" model='new Farm_Management.Models.ViewModels.DeleteConfirmationViewModel {
+    Id = Model.Id,
+    Title = "Xóa vật liệu?",
+    Description = "Kiểm tra thông tin vật liệu trước khi xóa khỏi danh mục.",
+    Notice = "Vật liệu đã từng được chọn trong việc hằng ngày sẽ không thể xóa; bạn có thể sửa trạng thái sang Ngừng sử dụng.",
+    Items = new()
+    {
+        ("Tên vật liệu", Model.Name ?? "Thiếu tên"),
+        ("Nhóm", MaterialRules.CategoryLabel(Model.Category)),
+        ("Đơn vị mặc định", string.IsNullOrWhiteSpace(Model.DefaultUnit) ? "Chưa đặt" : Model.DefaultUnit)
+    }
+}' />

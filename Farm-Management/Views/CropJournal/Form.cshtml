@@ -1,9 +1,295 @@
 @model Farm_Management.Models.ViewModels.CropJournalForm
+@using Farm_Management.Models
 @using Farm_Management.Services
-@{ViewData["Title"]=Model.Id==0?"Ghi việc đã làm":"Sửa ghi chép";var plant=ViewBag.Plant as Farm_Management.Models.Plant;var steps=(List<Farm_Management.Models.CropCareStep>)ViewBag.Steps;}
-<div class="page-header"><div><p class="eyebrow">SỔ CHĂM SÓC · @(plant?.SeasonName??plant?.BatchCode??"Chọn lại mùa vụ")</p><h1>@ViewData["Title"]</h1><p class="page-description">Ghi việc thực tế đã xảy ra. Một lần chăm hoặc thăm vườn là một ghi chép mới.</p></div><a class="btn btn-outline-secondary" asp-controller="Plants" asp-action="Details" asp-route-id="@Model.PlantId">← Về sổ mùa vụ</a></div>
-<div class="form-layout"><form class="card" method="post" enctype="multipart/form-data" asp-action="@(Model.Id==0?"Create":"Edit")" asp-route-id="@(Model.Id==0?(int?)null:Model.Id)" data-save-form><input asp-for="Id" type="hidden"/><input asp-for="PlantId" type="hidden"/><input asp-for="RecordCode" type="hidden"/><div class="form-section"><div asp-validation-summary="All"></div><h2 class="form-section-title">1. Hôm đó đã làm gì?</h2><label for="journal-kind" class="form-label">Việc đã làm</label><select asp-for="Kind" class="form-select" id="journal-kind">@foreach(var k in CropSeasonRules.Kinds){<option value="@k.Key">@k.Value</option>}</select><div class="row g-3 mt-1"><div class="col-md-6"><label asp-for="Date" class="form-label"></label><input asp-for="Date" type="date" max="@DateTime.Today.ToString("yyyy-MM-dd")" class="form-control"/></div><div class="col-md-6"><label asp-for="Recorder" class="form-label"></label><input asp-for="Recorder" class="form-control" placeholder="Ví dụ: bác Ba"/></div><div class="col-12"><label class="form-label" for="CareStepId">Làm theo việc nào trong kế hoạch? (có thể bỏ trống)</label><select asp-for="CareStepId" class="form-select"><option value="">Việc phát sinh, không chọn kế hoạch</option>@foreach(var s in steps){<option value="@s.Id" data-kind="@s.Kind">Ngày @s.PlannedDay · @s.Title</option>}</select></div></div></div>
-<div class="form-section" data-journal-kinds="Water Fertilize Pesticide Harvest"><h2 class="form-section-title">2. Dùng bao nhiêu / thu được bao nhiêu?</h2><div data-journal-kinds="Water"><label asp-for="WaterResourceId" class="form-label"></label><select asp-for="WaterResourceId" class="form-select"><option value="">Chọn nguồn nước của vùng này</option>@foreach(var source in (List<Farm_Management.Models.FieldResource>)ViewBag.WaterSources){<option value="@source.Id">@source.Name · @FarmRecordRules.Statuses.GetValueOrDefault(source.Status??"","Chưa rõ")</option>}</select></div><div data-journal-kinds="Fertilize Pesticide"><label asp-for="InputLotId" class="form-label"></label><select asp-for="InputLotId" class="form-select"><option value="">Chọn lô vật tư đã nhập</option>@foreach(var lot in (List<Farm_Management.Models.InputLot>)ViewBag.Inputs){<option value="@lot.Id" data-kind="@(lot.Kind=="Fertilizer"?"Fertilize":lot.Kind)" data-product="@lot.ProductName">@lot.Code · @lot.ProductName · @FarmRecordRules.Statuses.GetValueOrDefault(lot.Status??"","Chưa rõ")</option>}</select><p class="form-text">Chưa có lô hoặc nguồn? <a asp-controller="FarmRecords" asp-action="Index" target="_blank">Mở Vật tư & kiểm nghiệm</a>, nhập hồ sơ rồi tải lại form này.</p><label asp-for="Material" class="form-label"></label><input asp-for="Material" class="form-control" placeholder="Chép đúng tên trên bao bì"/></div><div class="row g-3 mt-1"><div class="col-md-7"><label asp-for="Amount" class="form-label"></label><input asp-for="Amount" class="form-control" type="number" min="0.01" max="1000000000" step="0.01"/><p class="form-text">Ghi tổng lượng của lần này cho cả lô. Ví dụ: 200 lít nước hoặc 2 kg phân. Khi thu hoạch chỉ nhập kg.</p></div><div class="col-md-5"><label asp-for="Unit" class="form-label"></label><select asp-for="Unit" class="form-select"><option value="">Chọn đơn vị</option><option value="l" data-kinds="Water Fertilize Pesticide">lít</option><option value="m3" data-kinds="Water">m³</option><option value="kg" data-kinds="Fertilize Pesticide Harvest">kg</option><option value="g" data-kinds="Fertilize Pesticide">g</option><option value="ml" data-kinds="Fertilize Pesticide">ml</option></select></div></div><div class="mt-3" data-journal-kinds="Pesticide"><label asp-for="WithdrawalDays" class="form-label"></label><input asp-for="WithdrawalDays" type="number" min="0" max="36500" class="form-control"/><p class="form-text">Đọc số ngày cách ly trên nhãn đúng sản phẩm và cây trồng. Không biết thì hỏi người phụ trách trước khi lưu; không tự nhập 0.</p></div><div class="mt-3" data-journal-kinds="Harvest"><label asp-for="Quality" class="form-label"></label><input asp-for="Quality" class="form-control" placeholder="Ví dụ: loại A, quả đều / có quả bị dập"/></div></div>
-<div class="form-section" data-journal-kinds="Observation"><h2 class="form-section-title">2. Cây hiện giờ thế nào?</h2><div class="row g-3"><div class="col-md-6"><label asp-for="GrowthStage" class="form-label"></label><select asp-for="GrowthStage" class="form-select"><option value="">Chọn giai đoạn</option>@foreach(var s in CropSeasonRules.Stages){<option value="@s.Key">@s.Value</option>}</select></div><div class="col-md-6"><label asp-for="Condition" class="form-label"></label><select asp-for="Condition" class="form-select"><option value="">Chọn tình trạng</option>@foreach(var c in CropSeasonRules.Conditions){<option value="@c.Key">@c.Value</option>}</select></div><div class="col-md-4"><label asp-for="HeightCm" class="form-label"></label><input asp-for="HeightCm" type="number" min="0" max="100000" step="0.01" class="form-control"/></div><div class="col-md-4"><label asp-for="SurvivalPercent" class="form-label"></label><input asp-for="SurvivalPercent" type="number" min="0" max="100" step="0.01" class="form-control"/></div><div class="col-md-4"><label asp-for="AffectedPercent" class="form-label"></label><input asp-for="AffectedPercent" type="number" min="0" max="100" step="0.01" class="form-control"/></div></div><p class="form-text">Số đo không bắt buộc: chưa đo thì để trống. Ví dụ kiểm tra 100 cây, còn sống 95 cây thì ghi 95%. Ghi cùng cách đo ở các lần để dễ so sánh.</p></div>
-<div class="form-section"><h2 class="form-section-title">3. Cách làm và điều quan sát được</h2><label asp-for="Summary" class="form-label"></label><textarea asp-for="Summary" rows="4" class="form-control" placeholder="Ví dụ: Tưới sáng sớm, đất đủ ẩm. Hàng cuối hơi héo, sẽ kiểm tra ngày mai."></textarea><div class="row g-3 mt-1"><div class="col-md-6"><label asp-for="Method" class="form-label"></label><input asp-for="Method" class="form-control" placeholder="Ví dụ: tưới gốc / bón quanh gốc"/></div><div class="col-md-6"><label asp-for="Weather" class="form-label"></label><input asp-for="Weather" class="form-control" placeholder="Ví dụ: nắng, đất khô / mưa nhiều"/></div></div><label asp-for="Photo" class="form-label mt-3"></label><input asp-for="Photo" type="file" accept="image/jpeg,image/png,image/webp" class="form-control"/><p class="form-text">Không bắt buộc. JPG, PNG hoặc WebP tối đa 5 MB. Nên chụp cùng vị trí qua các lần.</p>@if(CropSeasonRules.PhotoIsLocal(Model.ExistingPhoto)){<img src="@Model.ExistingPhoto" alt="Ảnh ghi chép hiện tại" class="crop-photo"/><label class="d-block mt-2"><input asp-for="RemovePhoto"/> Bỏ ảnh khỏi ghi chép</label>}</div><partial name="_RecordChange"/><div class="form-actions"><a asp-controller="Plants" asp-action="Details" asp-route-id="@Model.PlantId" class="btn btn-outline-secondary">Hủy</a><button type="submit" class="btn btn-farm">Lưu vào sổ mùa vụ</button></div></form><aside class="form-aside"><h3>Ghi đúng việc, thấy rõ thay đổi</h3><ol><li>Chọn việc và ngày đã làm.</li><li>Ghi lượng thực tế, không ghi lượng dự định.</li><li>Thấy cây vàng lá, sâu, héo… ghi rõ mô tả.</li><li>Bấm Lưu rồi xem lại trong sổ. Nhập sai thì chọn Sửa ghi chép.</li></ol><p>Cần ghi việc sẽ làm? Quay về sổ, chọn “Thêm việc dự kiến”. Kế hoạch và nhật ký là hai phần riêng.</p></aside></div>
-@section Scripts{<partial name="_ValidationScriptsPartial"/><script src="~/js/crop-journal.js" asp-append-version="true"></script>}
+@{
+    ViewData["Title"] = Model.Id == 0 ? "Ghi việc hằng ngày" : "Sửa công việc";
+    var plant = ViewBag.Plant as Plant;
+    var plantLocked = ViewBag.PlantLocked as bool? == true;
+    var plants = ViewBag.Plants as List<Plant> ?? new List<Plant>();
+    var plantTypes = ViewBag.PlantTypes as Dictionary<int, PlantType> ?? new Dictionary<int, PlantType>();
+    var areas = ViewBag.Areas as Dictionary<int, Area> ?? new Dictionary<int, Area>();
+    var steps = ViewBag.Steps as List<CropCareStep> ?? new List<CropCareStep>();
+    var materials = ViewBag.Materials as List<MaterialItem> ?? new List<MaterialItem>();
+    var workers = ViewBag.Workers as List<Worker> ?? new List<Worker>();
+    var hasLegacyMaterial = !Model.MaterialItemId.HasValue && !string.IsNullOrWhiteSpace(Model.LegacyMaterial);
+    var cancelUrl = !string.IsNullOrWhiteSpace(Model.ReturnUrl) && Url.IsLocalUrl(Model.ReturnUrl)
+        ? Model.ReturnUrl
+        : (Model.PlantId.HasValue ? Url.Action("Details", "Plants", new { id = Model.PlantId }) : Url.Action("Index", "CropJournal"));
+}
+<div class="page-header">
+    <div>
+        <p class="eyebrow">VIỆC HẰNG NGÀY @(plant != null ? "· " + (plant.SeasonName ?? plant.BatchCode) : "")</p>
+        <h1>@ViewData["Title"]</h1>
+        <p class="page-description">Chọn ngày, loại việc, vật liệu từ danh mục (nếu có) và gán cho 1 hoặc nhiều công nhân làm việc.</p>
+    </div>
+    <a href="@cancelUrl" class="btn btn-outline-secondary">← Quay lại</a>
+</div>
+
+<div class="form-layout">
+    <form class="card" method="post" enctype="multipart/form-data" asp-action="@(Model.Id == 0 ? "Create" : "Edit")" asp-route-id="@(Model.Id == 0 ? (int?)null : Model.Id)" id="daily-work-form" data-save-form>
+        <input asp-for="Id" type="hidden" />
+        <input asp-for="RecordCode" type="hidden" />
+        <input asp-for="ReturnUrl" type="hidden" />
+
+        <div class="form-section">
+            <div asp-validation-summary="All"></div>
+            <h2 class="form-section-title">1. Công việc & mùa vụ</h2>
+
+            <div class="mb-3">
+                <label asp-for="PlantId" class="form-label"></label>
+                @if (plantLocked && plant != null)
+                {
+                    <input asp-for="PlantId" type="hidden" id="PlantId" />
+                    <div class="form-control bg-light">
+                        <strong>@(plant.SeasonName ?? plant.BatchCode ?? $"Mùa vụ #{plant.Id}")</strong>
+                        @if (plant.AreaId.HasValue && areas.TryGetValue(plant.AreaId.Value, out var area))
+                        {
+                            <span class="text-muted"> · @area.Name</span>
+                        }
+                    </div>
+                }
+                else
+                {
+                    <select asp-for="PlantId" id="PlantId" class="form-select" required>
+                        <option value="">-- Chọn mùa vụ / lô cây --</option>
+                        @foreach (var p in plants)
+                        {
+                            var areaText = p.AreaId.HasValue && areas.TryGetValue(p.AreaId.Value, out var a) ? a.Name : null;
+                            var typeText = p.PlantTypeId.HasValue && plantTypes.TryGetValue(p.PlantTypeId.Value, out var t) ? t.Name : null;
+                            <option value="@p.Id">@(p.SeasonName ?? p.BatchCode ?? $"Mùa vụ #{p.Id}")@(!string.IsNullOrWhiteSpace(typeText) ? $" · {typeText}" : "")@(!string.IsNullOrWhiteSpace(areaText) ? $" ({areaText})" : "")</option>
+                        }
+                    </select>
+                    @if (!plants.Any())
+                    {
+                        <p class="form-text text-warning">Chưa có mùa vụ. <a asp-controller="Plants" asp-action="Create">Tạo mùa vụ</a> trước khi ghi việc.</p>
+                    }
+                }
+                <span asp-validation-for="PlantId"></span>
+            </div>
+
+            <div class="row g-3">
+                <div class="col-md-6">
+                    <label asp-for="Date" class="form-label"></label>
+                    <input asp-for="Date" type="date" max="@DateTime.Today.ToString("yyyy-MM-dd")" class="form-control" required />
+                    <span asp-validation-for="Date"></span>
+                </div>
+                <div class="col-md-6">
+                    <label asp-for="Kind" class="form-label"></label>
+                    <select asp-for="Kind" class="form-select" id="journal-kind" required>
+                        @foreach (var k in CropSeasonRules.Kinds)
+                        {
+                            <option value="@k.Key">@k.Value</option>
+                        }
+                    </select>
+                    <span asp-validation-for="Kind"></span>
+                </div>
+            </div>
+        </div>
+
+        <div class="form-section" data-journal-kinds="Water Fertilize Pesticide Care Harvest">
+            <h2 class="form-section-title">2. Vật liệu & chi tiết (số lượng không bắt buộc)</h2>
+
+            <div class="mb-3" data-journal-kinds="Fertilize Pesticide Care">
+                <label asp-for="MaterialItemId" class="form-label">
+                    Vật liệu đã dùng <span id="material-required-hint" class="text-muted fw-normal"></span>
+                </label>
+                <select asp-for="MaterialItemId" id="MaterialItemId" class="form-select" data-has-legacy="@(hasLegacyMaterial ? "true" : "false")">
+                    <option value="">-- Chọn vật liệu từ danh mục --</option>
+                    @foreach (var m in materials)
+                    {
+                        <option value="@m.Id" data-category="@m.Category" data-default-unit="@m.DefaultUnit">
+                            @m.Name (@MaterialRules.CategoryLabel(m.Category))@(m.IsActive != true ? " · Ngừng dùng" : "")
+                        </option>
+                    }
+                </select>
+                <span asp-validation-for="MaterialItemId"></span>
+                @if (hasLegacyMaterial)
+                {
+                    <p class="form-text text-info">Vật liệu ghi trước đây: <strong>@Model.LegacyMaterial</strong> (giữ nguyên nếu không chọn lại từ danh mục).</p>
+                }
+                <p class="form-text">
+                    Chưa có loại vật liệu cần dùng? <a asp-controller="Materials" asp-action="Create" target="_blank">Thêm vào danh mục vật liệu</a> rồi tải lại trang.
+                </p>
+            </div>
+
+            <div class="row g-3">
+                <div class="col-md-7">
+                    <label asp-for="Amount" class="form-label"></label>
+                    <input asp-for="Amount" id="Amount" class="form-control" type="number" min="0.01" max="1000000000" step="0.01" placeholder="Có thể bỏ trống, ví dụ: 2 hoặc 50" />
+                    <span asp-validation-for="Amount"></span>
+                </div>
+                <div class="col-md-5">
+                    <label asp-for="Unit" class="form-label"></label>
+                    <input asp-for="Unit" id="Unit" list="journal-units" maxlength="20" class="form-control" placeholder="kg, bao, chai, ml, lít..." />
+                    <datalist id="journal-units">
+                        @foreach (var u in MaterialRules.SuggestedUnits)
+                        {
+                            <option value="@u"></option>
+                        }
+                    </datalist>
+                    <span asp-validation-for="Unit"></span>
+                </div>
+            </div>
+
+            <div class="mt-3" data-journal-kinds="Pesticide">
+                <label asp-for="WithdrawalDays" class="form-label"></label>
+                <input asp-for="WithdrawalDays" id="WithdrawalDays" type="number" min="0" max="36500" class="form-control" placeholder="Có thể bỏ trống nếu không ghi" />
+                <span asp-validation-for="WithdrawalDays"></span>
+            </div>
+
+            <div class="mt-3" data-journal-kinds="Harvest">
+                <label asp-for="Quality" class="form-label"></label>
+                <input asp-for="Quality" id="Quality" class="form-control" placeholder="Có thể bỏ trống, ví dụ: loại A, quả đều" />
+                <span asp-validation-for="Quality"></span>
+            </div>
+        </div>
+
+        <div class="form-section" data-journal-kinds="Observation">
+            <h2 class="form-section-title">2. Tình trạng cây (tùy chọn)</h2>
+            <div class="row g-3">
+                <div class="col-md-6">
+                    <label asp-for="GrowthStage" class="form-label"></label>
+                    <select asp-for="GrowthStage" id="GrowthStage" class="form-select">
+                        <option value="">Chưa chọn giai đoạn</option>
+                        @foreach (var s in CropSeasonRules.Stages)
+                        {
+                            <option value="@s.Key">@s.Value</option>
+                        }
+                    </select>
+                </div>
+                <div class="col-md-6">
+                    <label asp-for="Condition" class="form-label"></label>
+                    <select asp-for="Condition" id="Condition" class="form-select">
+                        <option value="">Chưa chọn tình trạng</option>
+                        @foreach (var c in CropSeasonRules.Conditions)
+                        {
+                            <option value="@c.Key">@c.Value</option>
+                        }
+                    </select>
+                </div>
+                <div class="col-md-4">
+                    <label asp-for="HeightCm" class="form-label"></label>
+                    <input asp-for="HeightCm" id="HeightCm" type="number" min="0" max="100000" step="0.01" class="form-control" />
+                </div>
+                <div class="col-md-4">
+                    <label asp-for="SurvivalPercent" class="form-label"></label>
+                    <input asp-for="SurvivalPercent" id="SurvivalPercent" type="number" min="0" max="100" step="0.01" class="form-control" />
+                </div>
+                <div class="col-md-4">
+                    <label asp-for="AffectedPercent" class="form-label"></label>
+                    <input asp-for="AffectedPercent" id="AffectedPercent" type="number" min="0" max="100" step="0.01" class="form-control" />
+                </div>
+            </div>
+        </div>
+
+        <div class="form-section">
+            <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-2">
+                <h2 class="form-section-title mb-0">3. Công nhân thực hiện (bắt buộc chọn 1 hoặc nhiều người)</h2>
+                <span id="worker-selected-count" class="badge bg-secondary">Đã chọn: @Model.WorkerIds.Count công nhân</span>
+            </div>
+
+            @if (!string.IsNullOrWhiteSpace(Model.LegacyRecorder) && Model.WorkerIds.Count == 0)
+            {
+                <div class="alert alert-info py-2 small">
+                    Người ghi trước đây: <strong>@Model.LegacyRecorder</strong>. Hãy chọn công nhân tương ứng bên dưới khi lưu lại.
+                </div>
+            }
+
+            @if (!workers.Any())
+            {
+                <div class="alert alert-warning">
+                    Chưa có công nhân đang làm việc. <a asp-controller="Workers" asp-action="Create">Thêm công nhân</a> trước khi giao việc.
+                </div>
+            }
+            else
+            {
+                <div class="mb-2">
+                    <input type="search" id="worker-picker-search" class="form-control" placeholder="Tìm nhanh tên hoặc mã công nhân…" aria-label="Tìm công nhân" />
+                </div>
+                <div class="worker-picker-grid" id="worker-picker-grid">
+                    @foreach (var w in workers)
+                    {
+                        var isChecked = Model.WorkerIds.Contains(w.Id);
+                        var labelName = !string.IsNullOrWhiteSpace(w.FullName) ? w.FullName : (w.Code ?? $"CN #{w.Id}");
+                        <label class="worker-chip-option @(isChecked ? "is-selected" : "")" data-worker-option data-search="@w.FullName @w.Code">
+                            <input type="checkbox" name="WorkerIds" value="@w.Id" checked="@isChecked" />
+                            <span>
+                                <strong>@labelName</strong>
+                                @if (!string.IsNullOrWhiteSpace(w.Code))
+                                {
+                                    <small class="d-block text-muted">@w.Code@(w.IsActive != true ? " · Đã nghỉ" : "")</small>
+                                }
+                            </span>
+                        </label>
+                    }
+                </div>
+            }
+            <span asp-validation-for="WorkerIds" class="text-danger d-block mt-2"></span>
+            <div id="worker-picker-error" class="text-danger small mt-2" hidden>Vui lòng chọn ít nhất 1 công nhân thực hiện.</div>
+        </div>
+
+        <div class="form-section">
+            <h2 class="form-section-title">4. Ghi chú & thông tin thêm (không bắt buộc)</h2>
+            <label asp-for="Summary" class="form-label"></label>
+            <textarea asp-for="Summary" rows="3" class="form-control" placeholder="Ghi chú thêm nếu cần, ví dụ: Bón quanh gốc hàng A, đất ẩm tốt..."></textarea>
+            <span asp-validation-for="Summary"></span>
+
+            <details class="mt-3">
+                <summary class="fw-semibold text-success" style="cursor:pointer;">Mở rộng: Kế hoạch, cách làm, thời tiết, ảnh</summary>
+                <div class="pt-3">
+                    <div class="mb-3">
+                        <label class="form-label" for="CareStepId">Làm theo việc dự kiến (tùy chọn)</label>
+                        <select asp-for="CareStepId" id="CareStepId" class="form-select">
+                            <option value="">Không gắn kế hoạch</option>
+                            @foreach (var s in steps)
+                            {
+                                <option value="@s.Id" data-kind="@s.Kind" data-plant-id="@s.PlantId">Ngày @s.PlannedDay · @s.Title</option>
+                            }
+                        </select>
+                    </div>
+                    <div class="row g-3 mb-3">
+                        <div class="col-md-6">
+                            <label asp-for="Method" class="form-label"></label>
+                            <input asp-for="Method" class="form-control" placeholder="Ví dụ: bón gốc / phun lá" />
+                        </div>
+                        <div class="col-md-6">
+                            <label asp-for="Weather" class="form-label"></label>
+                            <input asp-for="Weather" class="form-control" placeholder="Ví dụ: nắng nhẹ / sau mưa" />
+                        </div>
+                    </div>
+                    <div>
+                        <label asp-for="Photo" class="form-label"></label>
+                        <input asp-for="Photo" type="file" accept="image/jpeg,image/png,image/webp" class="form-control" />
+                        <p class="form-text">JPG, PNG hoặc WebP tối đa 5 MB.</p>
+                        @if (CropSeasonRules.PhotoIsLocal(Model.ExistingPhoto))
+                        {
+                            <img src="@Model.ExistingPhoto" alt="Ảnh ghi chép hiện tại" class="crop-photo" />
+                            <label class="d-block mt-2"><input asp-for="RemovePhoto" /> Bỏ ảnh khỏi ghi chép</label>
+                        }
+                    </div>
+                </div>
+            </details>
+        </div>
+
+        <partial name="_RecordChange" />
+        <div class="form-actions">
+            <a href="@cancelUrl" class="btn btn-outline-secondary">Hủy</a>
+            <button type="submit" class="btn btn-farm">Lưu công việc</button>
+        </div>
+    </form>
+
+    <aside class="form-aside">
+        <h3>Ghi nhanh trong vài giây</h3>
+        <ol>
+            <li>Chọn mùa vụ, ngày và loại việc.</li>
+            <li>Nếu bón phân hoặc dùng thuốc, chọn vật liệu trong danh mục (Phân gà, Phân bò, Thuốc trừ sâu Nhật...).</li>
+            <li>Tích chọn 1 hoặc nhiều công nhân làm việc.</li>
+            <li>Số lượng và ghi chú nhập khi cần, còn lại để trống được.</li>
+        </ol>
+    </aside>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+    <script src="~/js/crop-journal.js" asp-append-version="true"></script>
+}

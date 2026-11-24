@@ -15,9 +15,10 @@ internal static class MaterialUsageChecks
             new CropJournalEntry {Id=1,Kind="Fertilize",Material="NPK đã dùng",Amount=1.25m,Unit="kg",Recorder="Người bón",Date=new(2024,1,4)},
             new CropJournalEntry {Id=2,Kind="Pesticide",Material="Thuốc đã dùng",Amount=250,Unit="ml",Recorder="Người phun",Date=new(2024,1,5),WithdrawalDays=7},
             new CropJournalEntry {Id=3,Kind="Water"},new CropJournalEntry {Id=4,Kind="Pesticide",Material="Đã lưu trữ",IsDeleted=true},
-            new CropJournalEntry {Id=5,Kind="Pesticide"}
-        });
-        check(rows.Count==3 && rows[0].ProductName=="NPK đã dùng" && rows[0].QuantityText=="1,25 kg" && rows[1].PerformedBy=="Người phun","Usage table uses recorded product, quantity/unit and performer for each application");
+            new CropJournalEntry {Id=5,Kind="Pesticide"},
+            new CropJournalEntry {Id=6,Kind="Care",Material="Phân gà bổ sung",MaterialItemId=10,Date=new(2024,1,6)}
+        }, new Dictionary<int, List<string>> { [1] = new() { "Công nhân A", "Công nhân B" } });
+        check(rows.Count==4 && rows[0].ProductName=="NPK đã dùng" && rows[0].QuantityText=="1,25 kg" && rows[0].PerformedBy=="Công nhân A, Công nhân B" && rows[1].PerformedBy=="Người phun" && rows[3].ProductName=="Phân gà bổ sung","Usage table uses assigned workers with recorder fallback, product, quantity/unit and optional Care materials");
         check(rows[2].ProductName==null && rows[2].QuantityText==null && rows[2].WithdrawalDays==null,"Missing usage data remains unknown rather than borrowing catalogue values or zero days");
         check(MaterialUsageService.WithdrawalEnd(rows[1])==new DateTime(2024,1,12),"Withdrawal end is derived from actual application date and recorded days");
         check(MaterialUsageService.WithdrawalEnd(new(){Date=new(2024,1,5),WithdrawalDays=0})==new DateTime(2024,1,5),"Explicit zero withdrawal days remains a recorded zero");

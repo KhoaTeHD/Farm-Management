@@ -1,0 +1,92 @@
+@model IEnumerable<Farm_Management.Models.MaterialItem>
+@using Farm_Management.Services
+@{
+    ViewData["Title"] = "Danh mục vật liệu";
+    var items = Model.ToList();
+    var usageCounts = ViewBag.UsageCounts as Dictionary<int, int> ?? new Dictionary<int, int>();
+}
+<div class="page-header">
+    <div>
+        <p class="eyebrow">VẬT LIỆU NÔNG TRẠI</p>
+        <h1>Danh mục vật liệu</h1>
+        <p class="page-description">Quản lý gọn các loại phân, thuốc và vật liệu đang dùng (ví dụ: Phân gà, Phân bò, Thuốc trừ sâu Nhật...) để chọn nhanh khi ghi việc hằng ngày.</p>
+    </div>
+    <a asp-action="Create" class="btn btn-farm">+ Thêm vật liệu</a>
+</div>
+
+<section class="card" data-list data-page-size="20">
+    <div class="list-toolbar">
+        <div class="search-field">
+            <svg class="icon"><use href="#i-search" /></svg>
+            <input type="search" class="form-control" data-list-search placeholder="Tìm tên vật liệu, ghi chú…" aria-label="Tìm vật liệu" />
+        </div>
+        <div class="toolbar-controls">
+            <select class="form-select" data-list-status aria-label="Lọc nhóm vật liệu">
+                <option value="">Tất cả nhóm</option>
+                @foreach (var cat in MaterialRules.Categories)
+                {
+                    <option value="@cat.Key">@cat.Value</option>
+                }
+            </select>
+        </div>
+    </div>
+
+    @if (!items.Any())
+    {
+        <div class="empty-state">
+            <svg class="icon empty-icon"><use href="#i-list" /></svg>
+            <h3>Chưa có vật liệu nào</h3>
+            <p>Thêm nhanh các vật liệu hay dùng như Phân gà, Phân bò, Thuốc trừ sâu Nhật… để chọn khi ghi việc hằng ngày.</p>
+            <a asp-action="Create" class="btn btn-farm">+ Thêm vật liệu đầu tiên</a>
+        </div>
+    }
+    else
+    {
+        <div class="table-responsive">
+            <table class="table table-responsive-card">
+                <thead>
+                    <tr>
+                        <th>Tên vật liệu</th>
+                        <th>Nhóm</th>
+                        <th>Đơn vị mặc định</th>
+                        <th>Số lần dùng</th>
+                        <th>Ghi chú</th>
+                        <th>Trạng thái</th>
+                        <th></th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var m in items)
+                    {
+                        var count = usageCounts.GetValueOrDefault(m.Id, 0);
+                        <tr data-list-row data-status="@m.Category" data-search="@m.Name @m.Notes @MaterialRules.CategoryLabel(m.Category)">
+                            <td data-label="Tên vật liệu"><strong>@(m.Name ?? "Chưa có tên")</strong></td>
+                            <td data-label="Nhóm"><span class="badge @(m.Category == "Pesticide" ? "bg-warning" : m.Category == "Fertilizer" ? "bg-success" : "bg-secondary")">@MaterialRules.CategoryLabel(m.Category)</span></td>
+                            <td data-label="Đơn vị">@(string.IsNullOrWhiteSpace(m.DefaultUnit) ? "—" : m.DefaultUnit)</td>
+                            <td data-label="Đã dùng">@count lần</td>
+                            <td data-label="Ghi chú">@(string.IsNullOrWhiteSpace(m.Notes) ? "—" : m.Notes)</td>
+                            <td data-label="Trạng thái">
+                                <span class="badge @(m.IsActive == true ? "bg-success" : "bg-secondary")">
+                                    @(m.IsActive == true ? "Đang dùng" : "Ngừng sử dụng")
+                                </span>
+                            </td>
+                            <td class="text-end">
+                                <a asp-action="Edit" asp-route-id="@m.Id" class="btn btn-sm btn-outline-farm">Sửa</a>
+                                <a asp-action="Delete" asp-route-id="@m.Id" class="btn btn-sm btn-outline-danger">Xóa</a>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+        <div class="filter-empty" data-list-empty hidden>Không tìm thấy vật liệu phù hợp.</div>
+        <div class="list-footer">
+            <span data-list-count></span>
+            <div class="list-pagination">
+                <button type="button" class="btn btn-sm btn-outline-secondary" data-list-prev>← Trước</button>
+                <span data-list-page></span>
+                <button type="button" class="btn btn-sm btn-outline-secondary" data-list-next>Sau →</button>
+            </div>
+        </div>
+    }
+</section>

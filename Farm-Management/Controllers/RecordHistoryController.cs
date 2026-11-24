@@ -27,6 +27,7 @@ public class RecordHistoryController(ApplicationDbContext db) : Controller
         rows.AddRange((await db.Plants.IgnoreQueryFilters().Where(r => r.IsDeleted == true).ToListAsync()).Select(r => ("Plant", r.Id, r.SeasonName ?? r.BatchCode ?? "Mùa vụ thiếu tên", r.DeletedAt)));
         rows.AddRange((await db.CropJournalEntries.IgnoreQueryFilters().Where(r => r.IsDeleted == true).ToListAsync()).Select(r => ("CropJournalEntry", r.Id, $"{CropSeasonRules.KindLabel(r.Kind)} · {r.Date:dd/MM/yyyy} · {r.Summary}", r.DeletedAt)));
         rows.AddRange((await db.CropCareSteps.IgnoreQueryFilters().Where(r => r.IsDeleted == true).ToListAsync()).Select(r => ("CropCareStep", r.Id, r.Title ?? "Việc thiếu tên", r.DeletedAt)));
+        rows.AddRange((await db.MaterialItems.IgnoreQueryFilters().Where(r => r.IsDeleted == true).ToListAsync()).Select(r => ("MaterialItem", r.Id, r.Name ?? "Vật liệu thiếu tên", r.DeletedAt)));
         rows.AddRange((await db.InputLots.IgnoreQueryFilters().Where(r => r.IsDeleted == true).ToListAsync()).Select(r => ("InputLot", r.Id, $"{r.Code} · {r.ProductName}", r.DeletedAt)));
         rows.AddRange((await db.FieldResources.IgnoreQueryFilters().Where(r => r.IsDeleted == true).ToListAsync()).Select(r => ("FieldResource", r.Id, r.Name ?? "Nguồn chưa có tên", r.DeletedAt)));
         return View(rows.OrderByDescending(r => r.Date).ToList());
@@ -74,7 +75,7 @@ public class RecordHistoryController(ApplicationDbContext db) : Controller
         else if (item is Plant plant && (!await db.Areas.AnyAsync(a => a.Id == plant.AreaId) || !await db.Seeds.AnyAsync(s => s.Id == plant.SeedId && s.PlantTypeId == plant.PlantTypeId))) error = "Vùng hoặc giống không còn khớp. Cần bổ sung trước khi khôi phục mùa vụ.";
         else if (item is FieldResource source && !await db.Areas.AnyAsync(a => a.Id == source.AreaId)) error = "Vùng trồng của nguồn không còn tồn tại.";
         else if (item is Seed seed && !await db.PlantTypes.AnyAsync(t => t.Id == seed.PlantTypeId)) error = "Khôi phục loại cây của giống trước.";
-        else if (item is not (CropJournalEntry or CropCareStep or Plant or FieldResource or InputLot or Area or Seed or PlantType)) return BadRequest();
+        else if (item is not (CropJournalEntry or CropCareStep or Plant or FieldResource or InputLot or MaterialItem or Area or Seed or PlantType)) return BadRequest();
         if (error != null) { TempData["Error"] = error; return RedirectToAction(nameof(Archived)); }
         item.IsDeleted = false; await db.SaveChangesAsync(); await tx.CommitAsync(); TempData["Success"] = "Đã khôi phục và ghi thêm một phiên bản lịch sử."; return RedirectToAction(nameof(Archived));
     }

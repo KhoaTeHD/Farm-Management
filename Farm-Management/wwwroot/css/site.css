@@ -2355,3 +2355,60 @@ html {
 .account-menu { display:grid; gap:8px; padding:12px 0; }
 .account-menu small { display:block; }
 @media (max-width:480px) { .auth-page { padding:12px; } .auth-card { padding:24px 18px; } }
+
+/* Simplified daily work, material catalog, and multi-worker picker */
+.worker-picker-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(190px, 1fr));
+  gap: 10px;
+  max-height: 300px;
+  overflow-y: auto;
+  padding: 4px 2px;
+}
+.worker-chip-option {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 12px;
+  border: 1px solid #d4dfd0;
+  border-radius: 10px;
+  background: #fbfcf9;
+  cursor: pointer;
+  transition: background 0.15s, border-color 0.15s;
+}
+.worker-chip-option[hidden] {
+  display: none;
+}
+.worker-chip-option:hover {
+  border-color: #8baa7c;
+  background: #f2f7ef;
+}
+.worker-chip-option.is-selected {
+  border-color: #285e45;
+  background: #eaf3ea;
+}
+.worker-chip-option input[type="checkbox"] {
+  width: 18px;
+  height: 18px;
+  accent-color: #285e45;
+  flex-shrink: 0;
+}
+.worker-badge-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+.worker-badge {
+  display: inline-block;
+  padding: 3px 9px;
+  font-size: 0.78rem;
+  font-weight: 600;
+  border-radius: 999px;
+  background: #ebf3eb;
+  color: #245641;
+  border: 1px solid #cde0cd;
+}
+.work-filter-bar .form-label {
+  font-size: 0.78rem;
+  margin-bottom: 4px;
+}

@@ -1,3 +1,36 @@
 @model Farm_Management.Models.CropJournalEntry
-@{ViewData["Title"]="Lưu trữ ghi chép nhập nhầm";}
-<div class="page-header"><h1>Lưu trữ ghi chép nhập nhầm?</h1></div><div class="card p-4"><p>@Farm_Management.Services.CropSeasonRules.KindLabel(Model.Kind) · @Model.Date?.ToString("dd/MM/yyyy")</p><p class="preserve-lines">@Model.Summary</p><p>Ghi chép sẽ ẩn khỏi sổ đang dùng nhưng vẫn giữ trong mục Hồ sơ lưu trữ và có thể khôi phục. Nếu chỉ sai ngày hoặc số lượng, bạn có thể sửa để giữ lịch sử.</p><div class="crop-actions"><a asp-action="Edit" asp-route-id="@Model.Id" class="btn btn-outline-farm">Sửa thay vì xóa</a><form method="post" asp-action="Delete" asp-route-id="@Model.Id"><partial name="_RecordChange"/><button type="submit" class="btn btn-danger">Chuyển vào lưu trữ</button></form><a asp-controller="Plants" asp-action="Details" asp-route-id="@Model.PlantId">Quay lại sổ</a></div></div>
+@{
+    ViewData["Title"] = "Xóa công việc?";
+    var returnUrl = ViewBag.ReturnUrl as string;
+    var backUrl = !string.IsNullOrWhiteSpace(returnUrl) && Url.IsLocalUrl(returnUrl)
+        ? returnUrl
+        : (Model.PlantId.HasValue ? Url.Action("Details", "Plants", new { id = Model.PlantId }) : Url.Action("Index", "CropJournal"));
+}
+<div class="page-header">
+    <h1>Xóa ghi chép công việc?</h1>
+</div>
+<div class="card p-4">
+    <p><strong>@Farm_Management.Services.CropSeasonRules.KindLabel(Model.Kind)</strong> · @(Model.Date?.ToString("dd/MM/yyyy") ?? "Chưa rõ ngày")</p>
+    @if (!string.IsNullOrWhiteSpace(Model.Material))
+    {
+        <p><strong>Vật liệu:</strong> @Model.Material</p>
+    }
+    @if (!string.IsNullOrWhiteSpace(Model.Recorder))
+    {
+        <p><strong>Công nhân:</strong> @Model.Recorder</p>
+    }
+    @if (!string.IsNullOrWhiteSpace(Model.Summary))
+    {
+        <p class="preserve-lines">@Model.Summary</p>
+    }
+    <p class="text-muted">Bản ghi sẽ được ẩn khỏi danh sách đang dùng. Nếu chỉ gõ nhầm ngày, vật liệu hoặc công nhân, bạn có thể bấm Sửa thay vì xóa.</p>
+    <div class="crop-actions">
+        <a asp-action="Edit" asp-route-id="@Model.Id" asp-route-returnUrl="@returnUrl" class="btn btn-outline-farm">Sửa lại</a>
+        <form method="post" asp-action="Delete" asp-route-id="@Model.Id">
+            <input type="hidden" name="returnUrl" value="@returnUrl" />
+            <partial name="_RecordChange" />
+            <button type="submit" class="btn btn-danger">Xóa ghi chép</button>
+        </form>
+        <a href="@backUrl" class="btn btn-outline-secondary">Quay lại</a>
+    </div>
+</div>

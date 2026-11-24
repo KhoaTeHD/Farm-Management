@@ -33,13 +33,15 @@
         <nav class="side-nav">
             <span class="nav-section-label">KHÔNG GIAN LÀM VIỆC</span>
             <a asp-controller="Home" asp-action="Index" class="@Active("Home", "Index")"><svg class="icon"><use href="#i-grid" /></svg>Tổng quan</a>
+            <a asp-controller="CropJournal" asp-action="Index" class="@Active("CropJournal")"><svg class="icon"><use href="#i-clock" /></svg>Việc hằng ngày</a>
             <a asp-controller="Areas" asp-action="Index" class="@Active("Areas")"><svg class="icon"><use href="#i-map" /></svg>Vùng trồng</a>
             <a asp-controller="Workers" asp-action="Index" class="@Active("Workers")"><svg class="icon"><use href="#i-users" /></svg>Công nhân</a>
             <span class="nav-section-label">CÂY TRỒNG</span>
-            <a asp-controller="Plants" asp-action="Index" class="@(controller is "Plants" or "CropJournal" or "CarePlans" ? "is-active" : "")"><svg class="icon"><use href="#i-leaf"/></svg>Theo dõi cây trồng</a>
+            <a asp-controller="Plants" asp-action="Index" class="@(controller is "Plants" or "CarePlans" ? "is-active" : "")"><svg class="icon"><use href="#i-leaf"/></svg>Theo dõi cây trồng</a>
+            <a asp-controller="Materials" asp-action="Index" class="@Active("Materials")"><svg class="icon"><use href="#i-list"/></svg>Danh mục vật liệu</a>
             <a asp-controller="PlantTypes" asp-action="Index" class="@Active("PlantTypes")"><svg class="icon"><use href="#i-list"/></svg>Loại cây</a>
             <a asp-controller="Seeds" asp-action="Index" class="@Active("Seeds")"><svg class="icon"><use href="#i-leaf"/></svg>Giống cây</a>
-            <a asp-controller="FarmRecords" asp-action="Index" class="@Active("FarmRecords")"><svg class="icon"><use href="#i-list"/></svg>Vật tư & kiểm nghiệm</a><a asp-controller="HarvestTrace" asp-action="Index" class="@Active("HarvestTrace")"><svg class="icon"><use href="#i-leaf"/></svg>Truy xuất thu hoạch</a><a asp-controller="RecordHistory" asp-action="Index" class="@Active("RecordHistory")"><svg class="icon"><use href="#i-clock"/></svg>Lịch sử & lưu hồ sơ</a><span class="nav-section-label">CHẤM CÔNG</span>
+            <span class="nav-section-label">CHẤM CÔNG</span>
             <a asp-controller="Attendance" asp-action="Calendar" class="@Active("Attendance", "Calendar")"><svg class="icon"><use href="#i-calendar" /></svg>Lịch chấm công</a>
             <a asp-controller="Attendance" asp-action="Index" class="@(controller == "Attendance" && action != "Calendar" ? "is-active" : "")"><svg class="icon"><use href="#i-list" /></svg>Chấm công theo ngày</a>
             <span class="nav-section-label">TIỀN LƯƠNG</span>

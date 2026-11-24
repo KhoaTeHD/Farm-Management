@@ -21,6 +21,7 @@ public class RecordChangeFilter(ApplicationDbContext db) : IAsyncActionFilter
             "Plants" => "Plant",
             "CropJournal" => "CropJournalEntry",
             "CarePlans" => "CropCareStep",
+            "Materials" => "MaterialItem",
             "HarvestTrace" => "HarvestTrace",
             "FarmRecords" => action.Contains("Input") ? "InputLot" : action.Contains("Resource") ? "FieldResource" : action.Contains("Inspection") ? "InspectionReport" : null,
             "RecordHistory" => context.HttpContext.Request.HasFormContentType ? context.HttpContext.Request.Form["recordType"].ToString() : null,
@@ -34,8 +35,8 @@ public class RecordChangeFilter(ApplicationDbContext db) : IAsyncActionFilter
             var fields = await context.HttpContext.Request.ReadFormAsync();
             var actor = context.HttpContext.User.Identity?.Name ?? "";
             var reason = fields["ChangeReason"].ToString().Trim();
-            if (actor.Length is < 1 or > 100 || reason.Length > 1000 || (!creating && reason.Length == 0))
-            { context.Result = new BadRequestObjectResult("Điền tên người ghi và lý do sửa / lưu trữ / khôi phục (tối đa 1.000 ký tự), rồi gửi lại."); return; }
+            if (actor.Length is < 1 or > 100 || reason.Length > 1000)
+            { context.Result = new BadRequestObjectResult("Không xác định được tài khoản đang ghi hoặc ghi chú vượt quá 1.000 ký tự."); return; }
             db.ChangeActor = actor; db.ChangeReason = reason;
             if (!creating)
             {
@@ -65,6 +66,7 @@ public class RecordChangeFilter(ApplicationDbContext db) : IAsyncActionFilter
         "Plant" => await db.Plants.IgnoreQueryFilters().FirstOrDefaultAsync(e => e.Id == id),
         "CropJournalEntry" => await db.CropJournalEntries.IgnoreQueryFilters().FirstOrDefaultAsync(e => e.Id == id),
         "CropCareStep" => await db.CropCareSteps.IgnoreQueryFilters().FirstOrDefaultAsync(e => e.Id == id),
+        "MaterialItem" => await db.MaterialItems.IgnoreQueryFilters().FirstOrDefaultAsync(e => e.Id == id),
         "InputLot" => await db.InputLots.IgnoreQueryFilters().FirstOrDefaultAsync(e => e.Id == id),
         "FieldResource" => await db.FieldResources.IgnoreQueryFilters().FirstOrDefaultAsync(e => e.Id == id),
         "InspectionReport" => await db.InspectionReports.IgnoreQueryFilters().FirstOrDefaultAsync(e => e.Id == id),
